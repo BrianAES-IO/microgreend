@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Fresh Microgreens — Micro-Greens Farm Ja</title>
+  <meta name="description" content="Order fresh microgreens delivered across Jamaica. Harvested Saturday morning, at your door the same day. Order by Friday at 12pm. J$500 delivery fee.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.microgreensfarmja.farm/order.html">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Order Fresh Microgreens — Micro-Greens Farm Ja">
+  <meta property="og:description" content="Order microgreens harvested Saturday morning, delivered to your door the same day. Order by Friday at 12pm.">
+  <meta property="og:image" content="https://www.microgreensfarmja.farm/logo.svg">
+  <meta property="og:url" content="https://www.microgreensfarmja.farm/order.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Micro-Greens Farm Ja">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Order Fresh Microgreens — Micro-Greens Farm Ja">
+  <meta name="twitter:description" content="Harvested Saturday morning, delivered to your door the same day. Order by Friday 12pm.">
+  <meta name="twitter:image" content="https://www.microgreensfarmja.farm/logo.svg">
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+
+<!-- ══ NAV ══════════════════════════════════════════════ -->
+<nav class="site-nav" id="site-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.svg" alt="Micro-Greens Farm Ja" class="nav-logo-img">
+      <span class="nav-logo-text" style="display:none">Micro-Greens Farm Ja</span>
+    </a>
+    <ul class="nav-links" id="nav-drawer">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="learn.html" class="nav-link">Learn More</a></li>
+      <li><a href="about.html" class="nav-link">About Us</a></li>
+      <li><a href="order.html" class="nav-link">Order</a></li>
+      <li><a href="contact.html" class="nav-link">Contact</a></li>
+      <li>
+        <a href="order.html" class="btn-gold nav-cta">
+          Order Now
+          <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+        </a>
+      </li>
+    </ul>
+    <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ ORDER HERO ════════════════════════════════════════ -->
+<section class="page-hero page-hero-short">
+  <div class="page-hero-media">
+    <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUB_yv60m4WHb_x-MR9YNHGnIUTq78DpyNeFzh-Zz2H4yHYLGqREXM8Kxw7S_G3l83mq8s4DxXnPMwnJHRHG-MMqMa6rGLk0FTNAo6Fx1uyYjHFQMMqt8c3UxzQo5_V7rQJL7SFAP4=w1280" alt="Fresh microgreens">
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="page-hero-content container">
+    <span class="eyebrow">Harvested &amp; Delivered Same Day</span>
+    <h1 class="display">Order Fresh<br>Microgreens</h1>
+    <span class="gold-line"></span>
+    <p class="lead lead-white">Harvested Saturday morning, at your door Saturday afternoon. Order by <strong data-order-deadline>Friday at 12pm</strong> to secure your spot.</p>
+  </div>
+</section>
+
+<!-- ══ CUTOFF WARNING ════════════════════════════════════ -->
+<div class="cutoff-warning cutoff-warning-rich" data-cutoff-warning style="display:none">
+  <div class="container">
+    <div class="cutoff-inner">
+      <i class="fa-solid fa-circle-info cutoff-icon" style="font-size:1.6rem;flex-shrink:0;color:#fde68a"></i>
+      <div>
+        <strong style="display:block;font-size:1.05rem;margin-bottom:.35rem">
+          This Saturday's order window has closed
+        </strong>
+        <p style="margin:0;line-height:1.6">
+          Ordering for <span data-closed-sat style="text-decoration:line-through;opacity:.7">this Saturday</span> is no longer available.
+          Your order will be harvested and delivered on
+          <strong data-next-sat style="color:#fde68a;white-space:nowrap">the following Saturday</strong>.
+          The next order deadline is <strong data-next-deadline style="color:#fde68a">Friday at 12pm</strong>.
+        </p>
+        <p style="margin:.5rem 0 0;font-size:.88rem;opacity:.85">
+          <i class="fa-solid fa-leaf" style="margin-right:.3rem"></i>
+          Your microgreens will still be harvested fresh that Saturday morning and delivered to your door the same day.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HARVEST BANNER ════════════════════════════════════ -->
+<div class="harvest-banner">
+  <div class="container">
+    <div class="harvest-banner-inner">
+      <div class="harvest-icon"><i class="fa-solid fa-leaf"></i></div>
+      <p>
+        <strong>Next Harvest: <span data-harvest-date>this Saturday</span></strong>
+        &mdash; Order deadline: <strong><span data-order-deadline>Friday at 12pm</span></strong>
+        &mdash; Harvested &amp; delivered same day (Saturday) &mdash; J$500 delivery fee
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ORDER LAYOUT ═══════════════════════════════════════ -->
+<section class="section-sm">
+  <div class="container">
+    <div class="order-layout">
+
+      <!-- LEFT: Products -->
+      <div class="order-products-col">
+        <div class="order-col-header">
+          <span class="eyebrow">Step 1</span>
+          <h2 class="h3">Choose Your Microgreens</h2>
+          <p class="lead" style="font-size:.95rem">Each container is 8oz, freshly harvested that same Saturday morning. All prices in JMD.</p>
+        </div>
+
+        <div class="product-list" id="product-list">
+          <!-- JS renders product cards here -->
+        </div>
+      </div>
+
+      <!-- RIGHT: Order Summary + Checkout Form -->
+      <div class="order-summary-col">
+        <div class="order-summary-box" id="order-summary-box">
+
+          <h3 class="order-summary-title">Your Order</h3>
+
+          <div class="order-items-list" id="order-items-list">
+            <p class="order-empty-msg" id="order-empty-msg">No items yet. Select products on the left.</p>
+          </div>
+
+          <div class="order-totals" id="order-totals" style="display:none">
+            <div class="order-total-row">
+              <span>Subtotal</span>
+              <span id="subtotal-val">J$0</span>
+            </div>
+            <div class="order-total-row">
+              <span>Delivery</span>
+              <span id="delivery-val">J$500</span>
+            </div>
+            <div class="order-total-row" id="discount-row" style="display:none">
+              <span style="color:#2d6a4f">🏷️ Discount (<span id="disc-code-applied"></span>)</span>
+              <span id="discount-val" style="color:#2d6a4f;font-weight:700">−J$0</span>
+            </div>
+            <div class="order-total-row order-total-grand">
+              <span>Total</span>
+              <span id="grand-total-val">J$500</span>
+            </div>
+          </div>
+
+          <!-- CHECKOUT FORM -->
+          <form class="checkout-form" id="checkout-form" novalidate>
+            <div class="form-section-label">
+              <span class="eyebrow" style="font-size:.65rem">Step 2</span>
+              <h4 class="h4" style="margin-top:.25rem">Your Contact Details</h4>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="first-name">First Name <span class="req">*</span></label>
+                <input type="text" id="first-name" name="firstName" placeholder="e.g. Marcus" required autocomplete="given-name">
+              </div>
+              <div class="form-group">
+                <label for="last-name">Last Name <span class="req">*</span></label>
+                <input type="text" id="last-name" name="lastName" placeholder="e.g. Reid" required autocomplete="family-name">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address <span class="req">*</span></label>
+              <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number <span class="req">*</span></label>
+              <input type="tel" id="phone" name="phone" placeholder="e.g. 876-555-0000" required autocomplete="tel">
+            </div>
+
+            <div class="form-section-label" style="margin-top:1.5rem">
+              <span class="eyebrow" style="font-size:.65rem">Step 3</span>
+              <h4 class="h4" style="margin-top:.25rem">Delivery Address</h4>
+              <p style="font-size:.85rem;color:var(--text-light);margin-top:.25rem">We deliver to your door every Saturday. Please provide your full address.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="street">Street Address <span class="req">*</span></label>
+              <input type="text" id="street" name="street" placeholder="e.g. 14 Hope Road" required autocomplete="street-address">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="community">Community / Area <span class="req">*</span></label>
+                <input type="text" id="community" name="community" placeholder="e.g. Liguanea" required>
+              </div>
+              <div class="form-group">
+                <label for="parish">Parish <span class="req">*</span></label>
+                <select id="parish" name="parish" required>
+                  <option value="">Select parish</option>
+                  <option>Kingston</option>
+                  <option>St. Andrew</option>
+                  <option>St. Thomas</option>
+                  <option>Portland</option>
+                  <option>St. Mary</option>
+                  <option>St. Ann</option>
+                  <option>Trelawny</option>
+                  <option>St. James</option>
+                  <option>Hanover</option>
+                  <option>Westmoreland</option>
+                  <option>St. Elizabeth</option>
+                  <option>Manchester</option>
+                  <option>Clarendon</option>
+                  <option>St. Catherine</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="landmark">Landmark / Delivery Notes</label>
+              <textarea id="landmark" name="landmark" rows="2" placeholder="e.g. Blue gate next to pharmacy, ring bell on arrival"></textarea>
+            </div>
+
+            <div class="form-section-label" style="margin-top:1.5rem">
+              <span class="eyebrow" style="font-size:.65rem">Step 4</span>
+              <h4 class="h4" style="margin-top:.25rem">Payment</h4>
+              <p style="font-size:.85rem;color:var(--text-light);margin-top:.25rem">Payment is by bank transfer or cash on delivery. We will contact you with details after your order is confirmed.</p>
+            </div>
+
+            <div class="payment-info-box">
+              <div class="payment-method">
+                <span class="payment-icon"><i class="fa-solid fa-building-columns"></i></span>
+                <div>
+                  <strong>Bank Transfer</strong>
+                  <p>Details sent to your email after order confirmation.</p>
+                </div>
+              </div>
+              <div class="payment-method">
+                <span class="payment-icon"><i class="fa-solid fa-money-bill-wave"></i></span>
+                <div>
+                  <strong>Cash on Delivery</strong>
+                  <p>Pay when your order arrives at your door on Saturday.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:1.5rem">
+              <label for="payment-pref">Payment Preference <span class="req">*</span></label>
+              <select id="payment-pref" name="paymentPref" required>
+                <option value="">Select preference</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="cash_on_delivery">Cash on Delivery</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-top:1rem">
+              <label for="order-notes">Special Instructions</label>
+              <textarea id="order-notes" name="notes" rows="2" placeholder="Any special requests or notes for your order?"></textarea>
+            </div>
+
+            <!-- ── DISCOUNT CODE ── -->
+            <div class="form-section-label" style="margin-top:1.75rem">
+              <span class="eyebrow" style="font-size:.65rem">Step 5 — Optional</span>
+              <h4 class="h4" style="margin-top:.25rem">Discount Code</h4>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:flex-start;flex-wrap:wrap">
+              <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0">
+                <input type="text" id="disc-code-input" name="discountCode" placeholder="e.g. WELCOME10"
+                       autocomplete="off" spellcheck="false"
+                       oninput="this.value=this.value.toUpperCase()"
+                       onkeydown="if(event.key==='Enter'){event.preventDefault();applyDiscount()}">
+              </div>
+              <button type="button" onclick="applyDiscount()"
+                      style="padding:.68rem 1.2rem;background:var(--forest);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
+                Apply
+              </button>
+            </div>
+            <div id="disc-feedback" style="display:none;margin-top:.55rem;padding:.6rem .9rem;border-radius:8px;font-size:.88rem;line-height:1.4"></div>
+
+            <div id="form-error" class="form-error" style="display:none"></div>
+
+            <button type="submit" class="btn-gold btn-block" id="place-order-btn">
+              Place My Order
+            </button>
+
+            <p class="form-legal">By placing an order you confirm that you have read and agree to our delivery policy. We will contact you to confirm your order and provide payment details.</p>
+          </form>
+
+        </div>
+      </div>
+      <!-- end summary col -->
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ RESTAURANT / BULK CTA ══════════════════════════════ -->
+<section class="section bg-cream" style="padding:3.5rem 0">
+  <div class="container">
+    <div class="bulk-cta-card reveal">
+      <div class="bulk-cta-icon"><i class="fa-solid fa-utensils"></i></div>
+      <div class="bulk-cta-body">
+        <span class="eyebrow" style="color:var(--gold)">Restaurants &amp; Chefs</span>
+        <h2 class="h3" style="margin:.35rem 0 .6rem">Restaurant or Bulk Order?</h2>
+        <p>We supply restaurants, hotels, and retailers across Jamaica with consistent, chef-quality microgreens. Volume pricing, custom harvest schedules, and dedicated account support — let's talk.</p>
+        <div class="bulk-cta-actions">
+          <a href="contact.html?subject=wholesale" class="btn-gold">
+            <i class="fa-solid fa-envelope" style="margin-right:.4rem"></i>Get in Touch
+          </a>
+          <a href="https://wa.me/18762832127?text=Hi%2C%20I%27m%20interested%20in%20a%20restaurant%20or%20bulk%20order%20of%20microgreens." class="bulk-wa-btn" target="_blank" rel="noopener">
+            <i class="fa-brands fa-whatsapp" style="margin-right:.4rem"></i>WhatsApp Us
+          </a>
+        </div>
+      </div>
+      <div class="bulk-cta-img" aria-hidden="true">
+        <i class="fa-solid fa-seedling"></i>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SUCCESS MODAL ══════════════════════════════════════ -->
+<div class="modal-overlay" id="success-modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="success-title">
+  <div class="modal-box modal-box-success">
+    <div class="success-icon"><i class="fa-solid fa-circle-check" style="color:var(--gold);font-size:3rem"></i></div>
+    <h2 class="h3" id="success-title" style="margin-top:1rem">Order Placed!</h2>
+    <p class="order-ref-label">Your order reference</p>
+    <p class="order-ref-num" id="success-order-id"></p>
+
+    <!-- QR Code -->
+    <div id="receipt-qr" style="margin:1.25rem auto 0;display:flex;justify-content:center"></div>
+    <p style="color:var(--text-mid);font-size:.82rem;margin-top:.5rem;text-align:center">Show this QR code on delivery for instant confirmation</p>
+
+    <p style="color:var(--text-mid);margin-top:1rem">Thank you! We will contact you at the details provided to confirm your order and arrange payment. Your microgreens will be delivered on <strong data-harvest-date>Saturday</strong>.</p>
+
+    <div style="display:flex;gap:.75rem;justify-content:center;margin-top:1.75rem;flex-wrap:wrap">
+      <button onclick="downloadReceipt()" class="btn-gold" style="display:inline-flex;align-items:center;gap:.5rem;font-size:.95rem">
+        <i class="fa-solid fa-download"></i> Download Receipt
+      </button>
+      <a href="index.html" style="display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.5rem;border:2px solid var(--gold);border-radius:8px;color:var(--forest);font-weight:600;text-decoration:none;font-size:.95rem">
+        <i class="fa-solid fa-house"></i> Back to Home
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="footer-logo-text">Micro-Greens Farm Ja</span>
+        <p>Jamaica's first dedicated microgreens farm. Growing nature's most potent foods with care, pride, and passion.</p>
+        <div class="footer-social">
+          <a href="https://www.instagram.com/microgreensfarm_ja/" aria-label="Instagram" class="social-link" target="_blank" rel="noopener">IG</a>
+          <a href="https://wa.me/18762832127" aria-label="WhatsApp" class="social-link" target="_blank" rel="noopener">WA</a>
+        </div>
+      </div>
+      <div class="footer-nav-col">
+        <h5 class="footer-heading">Navigate</h5>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="learn.html">Learn More</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="order.html">Order</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-nav-col">
+        <h5 class="footer-heading">Order Info</h5>
+        <ul>
+          <li>Harvest: Every Saturday</li>
+          <li>Order Deadline: Friday 12pm</li>
+          <li>Same-day Saturday delivery</li>
+          <li>J$500 delivery fee</li>
+        </ul>
+      </div>
+      <div class="footer-nav-col">
+        <h5 class="footer-heading">Legal</h5>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="cookies.html">Cookie Policy</a></li>
+          <li><a href="terms.html">Terms of Use</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="gold-rule" style="margin:2.5rem 0 1.5rem">
+    <div class="footer-bottom">
+      <p>&copy; <span id="yr"></span> Micro-Greens Farm Ja. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="privacy.html">Privacy</a>
+        <a href="cookies.html">Cookies</a>
+        <a href="terms.html">Terms</a>      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="back-top" aria-label="Back to top">↑</button>
+
+<script src="js/main.js"></script>
+<script src="js/overrides.js"></script>
+<script src="js/cookie-consent.js" defer></script>
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ── PRODUCT DATA ─────────────────────────────────────── */
+const DEFAULT_PRODUCTS = [
+  {
+    id: 'sunflower',
+    name: 'Sunflower',
+    price: 1200,
+    desc: 'Rich, nutty flavour with satisfying crunch. A customer favourite and perfect for salads and sandwiches.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUBbhZT70rnxD7MRYxJbUj8bhlVyeHV_m6FeBrGMjBGCefnlJGN1jKOX1KJj5VQxKi3O7z3wbvJoQ6gR-1aJKHFtO5HN9pzD0mFH6EI8gJSwO8JuZ3L2dP4l5nAm7i5TNFYFjl_Jls=w1280',
+  },
+  {
+    id: 'radish',
+    name: 'Radish',
+    price: 1200,
+    desc: 'Bold, peppery kick that elevates any dish. High in antioxidants and vitamins C and E.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUBKflGNW85laLyPjQKHDqlHEWgX3XVtf3v4JqAGJXvYYJF3miqVjpK4YJDv8aL4vNGmFT7Rk5ZpkNxT5b13yI4ZxzMEpW7Jdadb0i5Jby-j_jVnCqFqOBJqbB5dkGmOSgUbJzHpk=w1280',
+  },
+  {
+    id: 'pea-shoots',
+    name: 'Pea Shoots',
+    price: 1500,
+    desc: 'Sweet, delicate, and loaded with vitamins. Perfect for soups, stir-fries, and garnishes.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUBZApdlU70p4gbqzPZ4SKjEpFLz-GOEaqveMaouJWrmJVFgGCYrknCbbFQGGtHnGhD5k-dFHPJQxWn-6ICEjVPkLO4EzqLO2Z4O5IB3BKbhERMJtT_T7b6E4ZaJhEJMMxwQLSsshh4=w1280',
+  },
+  {
+    id: 'broccoli',
+    name: 'Broccoli',
+    price: 1300,
+    desc: 'Mild, slightly earthy with extraordinary sulforaphane content — a powerful cancer-fighting compound.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUCHPyii9eQLVPEiRG0YMwQ1Piq9pEjc2JcJiOAKj7QVJID1kSwQBH6tHKMFEPp_vfDl0fcbfzBv_aBj2k6LIb43VcX2eFuiEblvXunZXr4F2OsHhv9fxLSuVnJyNfmxhLMbFSdvr4=w1280',
+  },
+  {
+    id: 'kale',
+    name: 'Kale',
+    price: 1300,
+    desc: 'Earthy and slightly bitter with an incredible nutrient profile. Packed with vitamins K, A, and C.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUCHPyii9eQLVPEiRG0YMwQ1Piq9pEjc2JcJiOAKj7QVJID1kSwQBH6tHKMFEPp_vfDl0fcbfzBv_aBj2k6LIb43VcX2eFuiEblvXunZXr4F2OsHhv9fxLSuVnJyNfmxhLMbFSdvr4=w1280',
+  },
+  {
+    id: 'cilantro',
+    name: 'Cilantro',
+    price: 1800,
+    desc: 'Fresh, vibrant, and intensely aromatic. A staple herb for Jamaican cooking and international dishes.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUCxVClo3VRW9kc9Qpb73jX6fDWGFzKi1mJkioJpXbgLfmN0y60m1KyBQjRKmHqzwDSGLzVTMOKlD3-FVPlXg3CbdPDpnbr1dQ_-GtJSCFNmNFovBF2IB5p1aW-AJbOsJR9cAMrDQ=w1280',
+  },
+  {
+    id: 'basil',
+    name: 'Basil',
+    price: 2000,
+    desc: 'Intensely aromatic and sweet. Perfect for Jamaican and international cuisine alike.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUCxVClo3VRW9kc9Qpb73jX6fDWGFzKi1mJkioJpXbgLfmN0y60m1KyBQjRKmHqzwDSGLzVTMOKlD3-FVPlXg3CbdPDpnbr1dQ_-GtJSCFNmNFovBF2IB5p1aW-AJbOsJR9cAMrDQ=w1280',
+  },
+  {
+    id: 'amaranth',
+    name: 'Amaranth',
+    price: 1200,
+    desc: 'Mild, slightly sweet with a beautiful purple colour. Rich in lysine and complete protein.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUDOiU2tyBlaiP8tXYBbJnmfSuZ6nZnm-fJYNNHuROkU2e3Ym8ztDxv0rBpDXdEWf2DmkA8gWgdlGp1PU7c2kW5-GKq5QVQnKbhf_tTJTRsTODxNy2mhxGO7EXpBMq0yvdLmqhEU=w1280',
+  },
+  {
+    id: 'arugula',
+    name: 'Arugula',
+    price: 1400,
+    desc: 'Peppery, slightly bitter with a nutty finish. Rich in vitamin K and folate. A chef\'s favourite.',
+    img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUB_yv60m4WHb_x-MR9YNHGnIUTq78DpyNeFzh-Zz2H4yHYLGqREXM8Kxw7S_G3l83mq8s4DxXnPMwnJHRHG-MMqMa6rGLk0FTNAo6Fx1uyYjHFQMMqt8c3UxzQo5_V7rQJL7SFAP4=w1280',
+  },
+];
+
+/* Load products from admin localStorage (falls back to defaults) */
+function getProducts() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('mgfj_products') || '[]');
+    if (!stored.length) return [...DEFAULT_PRODUCTS];
+    return stored.map(p => {
+      const def = DEFAULT_PRODUCTS.find(d => d.id === p.id) || {};
+      return { ...def, ...p, img: p.imgUrl || p.img || def.img || '' };
+    });
+  } catch { return [...DEFAULT_PRODUCTS]; }
+}
+const PRODUCTS = getProducts();
+
+/* ── CART STATE ───────────────────────────────────────── */
+let cart = {};
+let appliedDiscount = null; // { discount, newTotal, code: discountObject }
+
+function fmtJMD(n) { return 'J$' + n.toLocaleString('en-JM'); }
+
+/* ── RENDER PRODUCTS ─────────────────────────────────── */
+function renderProducts() {
+  /* Read admin-set availability; default all true if not set */
+  let avail = {};
+  try { avail = JSON.parse(localStorage.getItem('mgfj_availability') || '{}'); } catch(e) {}
+
+  const list = document.getElementById('product-list');
+  list.innerHTML = PRODUCTS.map(p => {
+    const inStock = avail[p.id] !== false; /* undefined = available */
+    return `
+    <div class="product-card-order${inStock ? '' : ' pco-unavailable'}" id="pc-${p.id}" data-product-id="${p.id}">
+      <div class="pco-img" style="position:relative">
+        <img src="${p.img}" alt="${p.name}" loading="lazy"${inStock ? '' : ' style="opacity:.45;filter:grayscale(1)"'}>
+        ${inStock ? '' : '<div class="pco-out-badge">Out of Stock</div>'}
+      </div>
+      <div class="pco-body">
+        <h4 class="h4">${p.name}</h4>
+        <p class="pco-desc">${p.desc}</p>
+        <div class="pco-single">
+          <div class="pco-option-info">
+            <span class="pco-size">8oz container</span>
+            <span class="pco-price" style="font-weight:700;color:var(--forest)">${fmtJMD(p.price)}</span>
+          </div>
+          ${inStock ? `
+          <div class="qty-wrap">
+            <button class="qty-btn" onclick="changeQty('${p.id}',-1)" aria-label="Decrease">−</button>
+            <span class="qty-num" id="qty-${p.id}">0</span>
+            <button class="qty-btn" onclick="changeQty('${p.id}',1)" aria-label="Increase">+</button>
+          </div>` : `<p class="pco-stock-note">Currently unavailable — check back next Saturday.</p>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── QTY CHANGE ─────────────────────────────────────── */
+function changeQty(pid, delta) {
+  const product = PRODUCTS.find(p => p.id === pid);
+  const item = cart[pid] || { product, qty: 0 };
+  item.qty = Math.max(0, item.qty + delta);
+  if (item.qty === 0) {
+    delete cart[pid];
+  } else {
+    cart[pid] = item;
+  }
+  document.getElementById(`qty-${pid}`).textContent = item.qty;
+  renderSummary();
+}
+
+/* ── RENDER SUMMARY ────────────────────────────────── */
+function renderSummary() {
+  const itemsList = document.getElementById('order-items-list');
+  const emptyMsg = document.getElementById('order-empty-msg');
+  const totalsEl = document.getElementById('order-totals');
+  const subtotalEl = document.getElementById('subtotal-val');
+  const grandEl = document.getElementById('grand-total-val');
+
+  const items = Object.values(cart).filter(i => i.qty > 0);
+
+  if (!items.length) {
+    itemsList.innerHTML = '<p class="order-empty-msg" id="order-empty-msg">No items yet. Select products on the left.</p>';
+    totalsEl.style.display = 'none';
+    return;
+  }
+
+  let subtotal = 0;
+  const rows = items.map(item => {
+    const lineTotal = item.product.price * item.qty;
+    subtotal += lineTotal;
+    return `
+      <div class="summary-item">
+        <div class="summary-item-info">
+          <span class="summary-item-name">${item.product.name}</span>
+          <span class="summary-item-size">8oz &times; ${item.qty}</span>
+        </div>
+        <div class="summary-item-right">
+          <span class="summary-line-total">${fmtJMD(lineTotal)}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  itemsList.innerHTML = rows.join('');
+  totalsEl.style.display = '';
+  subtotalEl.textContent = fmtJMD(subtotal);
+
+  /* Discount calculation */
+  const deliveryFee = 500;
+  const discRow    = document.getElementById('discount-row');
+  const discVal    = document.getElementById('discount-val');
+  const discLabel  = document.getElementById('disc-code-applied');
+
+  if (appliedDiscount && appliedDiscount.code && window.MGFJ_Discount) {
+    const result = window.MGFJ_Discount.apply(subtotal, deliveryFee, appliedDiscount.code.code);
+    if (result.discount > 0) {
+      if (discRow)   discRow.style.display = '';
+      if (discVal)   discVal.textContent   = '−' + fmtJMD(result.discount);
+      if (discLabel) discLabel.textContent = appliedDiscount.code.code;
+      grandEl.textContent = fmtJMD(result.newTotal);
+      return;
+    }
+  }
+  if (discRow) discRow.style.display = 'none';
+  grandEl.textContent = fmtJMD(subtotal + deliveryFee);
+}
+
+/* ── APPLY DISCOUNT ─────────────────────────────────── */
+function applyDiscount() {
+  const codeInput  = document.getElementById('disc-code-input');
+  const feedback   = document.getElementById('disc-feedback');
+  const raw        = (codeInput ? codeInput.value : '').trim().toUpperCase();
+
+  const showFeedback = (msg, ok) => {
+    feedback.innerHTML = msg;
+    feedback.style.background = ok ? '#d1fae5' : '#fee2e2';
+    feedback.style.color      = ok ? '#065f46' : '#991b1b';
+    feedback.style.display    = '';
+  };
+
+  if (!raw) { showFeedback('Please enter a discount code.', false); return; }
+
+  if (!window.MGFJ_Discount) {
+    showFeedback('Discount system unavailable — please refresh the page.', false);
+    return;
+  }
+
+  const items    = Object.values(cart).filter(i => i.qty > 0);
+  const subtotal = items.reduce((s, i) => s + i.product.price * i.qty, 0);
+  const result   = window.MGFJ_Discount.apply(subtotal, 500, raw);
+
+  if (!result.code) {
+    appliedDiscount = null;
+    showFeedback('❌ That code is invalid, expired, or does not meet the minimum order amount.', false);
+    renderSummary();
+    return;
+  }
+
+  appliedDiscount = result;
+  let detail = '';
+  if (result.code.type === 'percent')      detail = `${result.code.value}% off your subtotal`;
+  else if (result.code.type === 'fixed')   detail = `J$${result.code.value.toLocaleString()} off your order`;
+  else if (result.code.type === 'freedelivery') detail = 'free delivery on this order';
+  showFeedback(`✅ Code <strong>"${raw}"</strong> applied — ${detail}! You save <strong>${fmtJMD(result.discount)}</strong>.`, true);
+  renderSummary();
+}
+
+/* ── PLACE ORDER ────────────────────────────────────── */
+document.getElementById('checkout-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const errorEl = document.getElementById('form-error');
+  errorEl.style.display = 'none';
+
+  const items = Object.values(cart).filter(i => i.qty > 0);
+  if (!items.length) {
+    errorEl.textContent = 'Please select at least one product before placing your order.';
+    errorEl.style.display = '';
+    return;
+  }
+
+  const fd = new FormData(this);
+  const data = Object.fromEntries(fd);
+
+  const required = ['firstName','lastName','email','phone','street','community','parish','paymentPref'];
+  for (const f of required) {
+    if (!data[f] || !data[f].trim()) {
+      errorEl.textContent = 'Please fill in all required fields marked with *.';
+      errorEl.style.display = '';
+      return;
+    }
+  }
+
+  const now = new Date();
+  const orderId = `MGF-${now.getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+
+  let subtotal = 0;
+  const orderItems = items.map(item => {
+    const lineTotal = item.product.price * item.qty;
+    subtotal += lineTotal;
+    return {
+      productId: item.product.id,
+      productName: item.product.name,
+      size: '8oz',
+      unitPrice: item.product.price,
+      qty: item.qty,
+      lineTotal,
+    };
+  });
+
+  /* Resolve discount at submission time */
+  let discountAmt  = 0;
+  let discountCode = null;
+  if (appliedDiscount && appliedDiscount.code && window.MGFJ_Discount) {
+    const dr = window.MGFJ_Discount.apply(subtotal, 500, appliedDiscount.code.code);
+    discountAmt  = dr.discount;
+    discountCode = appliedDiscount.code.code;
+  }
+
+  /* Affiliate ref */
+  const affRef = window.MGFJ_Affiliate ? window.MGFJ_Affiliate.getCurrent() : null;
+
+  const order = {
+    id: orderId,
+    status: 'pending',
+    createdAt: now.toISOString(),
+    customer: {
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+      email: data.email.trim(),
+      phone: data.phone.trim(),
+    },
+    delivery: {
+      type: 'delivery',
+      street: data.street.trim(),
+      community: data.community.trim(),
+      parish: data.parish,
+      landmark: (data.landmark || '').trim(),
+    },
+    payment: {
+      preference: data.paymentPref,
+    },
+    notes: (data.notes || '').trim(),
+    items: orderItems,
+    subtotal,
+    deliveryFee: 500,
+    discount: discountAmt,
+    discountCode: discountCode,
+    affiliateRef: affRef,
+    total: subtotal + 500 - discountAmt,
+    statusHistory: [
+      { status: 'pending', at: now.toISOString(), note: 'Order placed by customer' }
+    ],
+  };
+
+  try {
+    const existing = JSON.parse(localStorage.getItem('mgfj_orders') || '[]');
+    existing.unshift(order);
+    localStorage.setItem('mgfj_orders', JSON.stringify(existing));
+
+    /* Record discount use */
+    if (discountCode && window.MGFJ_Discount) {
+      window.MGFJ_Discount.recordUse(discountCode);
+    }
+    /* Record affiliate sale */
+    if (affRef && window.MGFJ_Affiliate) {
+      window.MGFJ_Affiliate.recordOrder(orderId, order.total);
+    }
+  } catch (err) {
+    console.error('Failed to save order', err);
+  }
+
+  /* Reset cart + discount */
+  cart = {};
+  appliedDiscount = null;
+  PRODUCTS.forEach(p => {
+    const el = document.getElementById(`qty-${p.id}`);
+    if (el) el.textContent = '0';
+  });
+  const dfb = document.getElementById('disc-feedback');
+  if (dfb) dfb.style.display = 'none';
+  const dci = document.getElementById('disc-code-input');
+  if (dci) dci.value = '';
+  renderSummary();
+
+  /* Store order for receipt download */
+  window._lastOrder = order;
+
+  document.getElementById('success-order-id').textContent = orderId;
+  const modal = document.getElementById('success-modal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  /* Generate QR code in success modal (using QR Server API) */
+  const qrBox = document.getElementById('receipt-qr');
+  if (qrBox) {
+    const qrImg = document.createElement('img');
+    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(orderId) + '&color=1a3c2a&bgcolor=ffffff&format=png';
+    qrImg.alt = 'Order QR Code — ' + orderId;
+    qrImg.style.cssText = 'width:160px;height:160px;border-radius:8px;border:1px solid #e5e7eb';
+    qrBox.innerHTML = '';
+    qrBox.appendChild(qrImg);
+  }
+
+  this.reset();
+});
+
+/* ── DOWNLOAD RECEIPT ──────────────────────────────── */
+function downloadReceipt() {
+  var order = window._lastOrder;
+  if (!order) { alert('No order data available. Please try again.'); return; }
+
+  /* Load QR code image from API first, then draw the full receipt */
+  var qrImg = new Image();
+  qrImg.crossOrigin = 'anonymous';
+  qrImg.onload = function() { buildReceiptCanvas(order, qrImg); };
+  qrImg.onerror = function() { buildReceiptCanvas(order, null); };
+  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='
+    + encodeURIComponent(order.id) + '&color=1a3c2a&bgcolor=ffffff&format=png';
+
+  /* Fallback if image takes too long */
+  setTimeout(function() {
+    if (!qrImg.complete) buildReceiptCanvas(order, null);
+  }, 4000);
+}
+
+var _receiptBuilt = false;
+function buildReceiptCanvas(order, qrImg) {
+  if (_receiptBuilt) return;       /* prevent double-fire from timeout + onload */
+  _receiptBuilt = true;
+  setTimeout(function() { _receiptBuilt = false; }, 500);
+
+  var W = 700, pad = 50, lineH = 28;
+  var itemCount = order.items.length;
+  var hasDisc   = order.discount > 0;
+  var H = 620 + itemCount * lineH + (hasDisc ? lineH : 0) + (qrImg ? 200 : 40);
+
+  var c   = document.createElement('canvas');
+  c.width = W; c.height = H;
+  var ctx = c.getContext('2d');
+
+  /* Background */
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  /* ── Header bar ── */
+  ctx.fillStyle = '#1a3c2a';
+  ctx.fillRect(0, 0, W, 95);
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 24px Georgia, serif';
+  ctx.fillText('Micro-Greens Farm Ja', W / 2, 40);
+  ctx.font = '12px Arial, sans-serif';
+  ctx.fillText("Jamaica's First Dedicated Microgreens Farm", W / 2, 62);
+  ctx.fillStyle = '#b8a04a';
+  ctx.font = '11px Arial';
+  ctx.fillText('www.microgreensfarmja.farm  |  (876) 283-2127', W / 2, 82);
+
+  var y = 125;
+
+  /* Title */
+  ctx.fillStyle = '#b8860b';
+  ctx.font = '600 11px Arial';
+  ctx.fillText('ORDER RECEIPT', W / 2, y);
+  y += 30;
+
+  /* Order ID */
+  ctx.fillStyle = '#1a3c2a';
+  ctx.font = 'bold 22px Arial';
+  ctx.fillText(order.id, W / 2, y);
+  y += 22;
+
+  /* Date */
+  ctx.fillStyle = '#888';
+  ctx.font = '12px Arial';
+  try {
+    ctx.fillText(new Date(order.createdAt).toLocaleDateString('en-JM', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }), W / 2, y);
+  } catch(e) { ctx.fillText(order.createdAt, W / 2, y); }
+  y += 28;
+
+  /* Divider */
+  ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+  y += 22;
+
+  /* Column headers */
+  ctx.fillStyle = '#aaa'; ctx.font = 'bold 10px Arial';
+  ctx.textAlign = 'left';   ctx.fillText('ITEM', pad, y);
+  ctx.textAlign = 'center'; ctx.fillText('QTY', W - 170, y);
+  ctx.textAlign = 'right';  ctx.fillText('AMOUNT', W - pad, y);
+  y += 22;
+
+  /* Items */
+  ctx.font = '13px Arial'; ctx.fillStyle = '#333';
+  for (var i = 0; i < order.items.length; i++) {
+    var item = order.items[i];
+    ctx.textAlign = 'left';   ctx.fillText((item.productName || item.name || 'Item') + ' (8 oz)', pad, y);
+    ctx.textAlign = 'center'; ctx.fillText('x' + item.qty, W - 170, y);
+    ctx.textAlign = 'right';  ctx.fillText('J$' + (item.lineTotal || 0).toLocaleString(), W - pad, y);
+    y += lineH;
+  }
+
+  y += 8;
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+  y += 22;
+
+  /* Totals */
+  function drawRow(label, value, bold, color) {
+    ctx.fillStyle = color || '#666';
+    ctx.font = (bold ? 'bold ' : '') + '14px Arial';
+    ctx.textAlign = 'left';  ctx.fillText(label, pad, y);
+    ctx.textAlign = 'right'; ctx.fillText(value, W - pad, y);
+    y += 24;
+  }
+  drawRow('Subtotal', 'J$' + (order.subtotal || 0).toLocaleString());
+  drawRow('Delivery', 'J$' + (order.deliveryFee || 500).toLocaleString());
+  if (hasDisc) drawRow('Discount (' + (order.discountCode || '') + ')', '-J$' + order.discount.toLocaleString(), false, '#2d6a4f');
+
+  y += 4;
+  ctx.strokeStyle = '#1a3c2a'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W - pad, y); ctx.stroke();
+  y += 24;
+  drawRow('Total', 'J$' + (order.total || 0).toLocaleString(), true, '#1a3c2a');
+  y += 16;
+
+  /* Customer info */
+  ctx.fillStyle = '#aaa'; ctx.font = '10px Arial'; ctx.textAlign = 'left';
+  ctx.fillText('CUSTOMER', pad, y);
+  y += 16;
+  ctx.fillStyle = '#555'; ctx.font = '12px Arial';
+  ctx.fillText(order.customer.firstName + ' ' + order.customer.lastName + '  |  ' + order.customer.phone, pad, y);
+  y += 16;
+  ctx.fillText(order.delivery.street + ', ' + order.delivery.community + ', ' + order.delivery.parish, pad, y);
+  y += 28;
+
+  /* QR Code */
+  if (qrImg && qrImg.naturalWidth > 0) {
+    var qrSz = 140;
+    ctx.drawImage(qrImg, (W - qrSz) / 2, y, qrSz, qrSz);
+    y += qrSz + 14;
+    ctx.textAlign = 'center'; ctx.fillStyle = '#888'; ctx.font = '11px Arial';
+    ctx.fillText('Present this QR code on delivery for instant confirmation', W / 2, y);
+    y += 28;
+  }
+
+  /* Footer */
+  ctx.fillStyle = '#f5f5f0';
+  ctx.fillRect(0, y - 5, W, 36);
+  ctx.fillStyle = '#aaa'; ctx.font = '10px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('Thank you for supporting local farming!  Micro-Greens Farm Ja', W / 2, y + 14);
+
+  /* Trigger download */
+  var dataUrl = c.toDataURL('image/png');
+  var link = document.createElement('a');
+  link.download = 'Receipt-' + order.id + '.png';
+  link.href = dataUrl;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(function() { document.body.removeChild(link); }, 100);
+}
+
+renderProducts();
+</script>
+</body>
+</html>

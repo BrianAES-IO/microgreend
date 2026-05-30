@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250">
+  <defs>
+    <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7dce6e"/>
+      <stop offset="100%" stop-color="#2d7a3a"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="91" fill="white" stroke="url(#rg)" stroke-width="5"/>
+  <!-- Left hand arcs -->
+  <path d="M22,118 Q34,92 56,102 Q76,112 98,116" stroke="#96c9aa" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <path d="M28,138 Q44,110 70,120 Q86,128 100,130" stroke="#96c9aa" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <!-- Right hand arcs -->
+  <path d="M178,118 Q166,92 144,102 Q124,112 102,116" stroke="#96c9aa" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <path d="M172,138 Q156,110 130,120 Q114,128 100,130" stroke="#96c9aa" stroke-width="11" stroke-linecap="round" fill="none"/>
+  <!-- Left leaf (light) -->
+  <path d="M88,52 C85,64 80,78 82,93 C84,103 88,107 88,107 C85,98 84,83 86,71 C87,61 90,52 88,52Z" fill="#7dce6e"/>
+  <!-- Centre leaf (dark, tallest) -->
+  <path d="M100,30 C96,50 92,70 93,88 C94,101 100,110 100,110 C100,110 106,101 107,88 C108,70 104,50 100,30Z" fill="#1e6b2c"/>
+  <!-- Right leaf (mid) -->
+  <path d="M112,52 C114,64 116,78 114,93 C113,103 112,107 112,107 C112,107 116,100 118,90 C120,76 115,63 112,52Z" fill="#4aaa5a"/>
+  <!-- Brand name -->
+  <text x="100" y="208" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="15.5" fill="#1a4d20" letter-spacing="2.5">MICRO-GREENS</text>
+  <text x="100" y="226" text-anchor="middle" font-family="Arial,sans-serif" font-weight="400" font-size="10" fill="#1a4d20" letter-spacing="5">FARM</text>
+</svg>

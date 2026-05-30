@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Micro-Greens Farm Ja — Fresh From Our Fields to Your Table</title>
+  <meta name="description" content="Jamaica's premier microgreens farm. Harvested every Saturday morning, delivered to your door the same day. Nutrient-dense, chef-quality microgreens at peak freshness.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.microgreensfarmja.farm/">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Micro-Greens Farm Ja — Fresh From Our Fields to Your Table">
+  <meta property="og:description" content="Jamaica's premier microgreens farm. Harvested every Saturday morning, delivered to your door the same day.">
+  <meta property="og:image" content="https://www.microgreensfarmja.farm/logo.svg">
+  <meta property="og:url" content="https://www.microgreensfarmja.farm/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Micro-Greens Farm Ja">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Micro-Greens Farm Ja — Fresh From Our Fields to Your Table">
+  <meta name="twitter:description" content="Jamaica's premier microgreens farm. Harvested every Saturday morning, delivered to your door the same day.">
+  <meta name="twitter:image" content="https://www.microgreensfarmja.farm/logo.svg">
+
+  <!-- JSON-LD: LocalBusiness -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Micro-Greens Farm Ja",
+    "url": "https://www.microgreensfarmja.farm",
+    "logo": "https://www.microgreensfarmja.farm/logo.svg",
+    "image": "https://www.microgreensfarmja.farm/logo.svg",
+    "description": "Jamaica's premier microgreens farm. Harvested every Saturday morning and delivered the same day.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "JM"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "Jamaica"
+    },
+    "sameAs": [
+      "https://www.instagram.com/microgreensfarm_ja/"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "url": "https://wa.me/18762832127"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "description": "Harvest and delivery day"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+
+<!-- ══ ANNOUNCEMENT BAR ══════════════════════════════════ -->
+<div class="ann-bar" id="ann-bar" style="display:none">
+  <div class="container ann-bar-inner">
+    <i class="fa-solid fa-seedling"></i>
+    <span>Our <strong>First Harvest</strong> is Saturday, June 27th, 2026 &mdash; <a href="order.html">Pre-order now &rarr;</a></span>
+    <button class="ann-close" id="ann-close" aria-label="Dismiss">&times;</button>
+  </div>
+</div>
+
+<!-- ══ NAV ══════════════════════════════════════════════ -->
+<nav class="site-nav" id="site-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="logo.svg" alt="Micro-Greens Farm Ja" class="nav-logo-img">
+      <span class="nav-logo-text" style="display:none">Micro-Greens Farm Ja</span>
+    </a>
+
+    <ul class="nav-links" id="nav-drawer">
+      <li><a href="index.html" class="nav-link">Home</a></li>
+      <li><a href="learn.html" class="nav-link">Learn More</a></li>
+      <li><a href="about.html" class="nav-link">About Us</a></li>
+      <li><a href="order.html" class="nav-link">Order</a></li>
+      <li><a href="contact.html" class="nav-link">Contact</a></li>
+      <li>
+        <a href="order.html" class="btn-gold nav-cta">
+          Order Now
+          <span class="cart-badge" id="cart-badge" style="display:none">0</span>
+        </a>
+      </li>
+    </ul>
+
+    <button class="burger" id="burger" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ HERO ═════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-media">
+    <img
+      src="t3.jpg"
+      alt="Fresh microgreens growing">
+    <div class="hero-overlay"></div>
+  </div>
+  <div class="hero-content container">
+    <span class="eyebrow">Jamaica's Finest Microgreens</span>
+    <h1 class="display">Nature's Most<br>Potent Harvest</h1>
+    <span class="gold-line"></span>
+    <p class="lead lead-white">Grown with care. Harvested Saturday morning.<br>Delivered to your door the same day — as fresh as it gets.</p>
+    <div class="hero-actions">
+      <a href="order.html" class="btn-gold btn-lg">Shop the Harvest</a>
+      <a href="learn.html" class="btn-outline btn-lg">Discover Microgreens</a>
+    </div>
+    <div class="hero-trust">
+      <span>✦ Weekly Saturday Harvest</span>
+      <span>✦ Same-Day Saturday Delivery</span>
+      <span>✦ Chef-Quality Greens</span>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true">
+    <span class="scroll-cue-line"></span>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ══ HARVEST BANNER ════════════════════════════════════ -->
+<div class="harvest-banner">
+  <div class="container">
+    <div class="harvest-banner-inner">
+      <div class="harvest-icon"><i class="fa-solid fa-leaf"></i></div>
+      <p>
+        <strong>Next Harvest: <span data-harvest-date>Saturday</span></strong>
+        &mdash; Order by <span data-order-deadline>Friday at 12pm</span> to secure your delivery.
+        <a href="order.html" class="harvest-link">Place your order &rarr;</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INTRO ═════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container grid-2">
+    <div class="reveal-left">
+      <span class="eyebrow">What Are Microgreens?</span>
+      <h2 class="h2">Small Plants,<br><em>Extraordinary Power</em></h2>
+      <span class="gold-line"></span>
+      <p class="lead">Microgreens are the young, tender seedlings of vegetables and herbs, harvested just days after germination. Research shows they contain up to <strong>40 times</strong> the nutrients of their mature counterparts — making them one of the most potent superfoods on the planet.</p>
+      <p style="margin-top:1rem;color:var(--text-mid);">At Micro-Greens Farm Ja, we bring this nutritional powerhouse to Jamaican tables for the first time — grown locally, harvested fresh, and delivered straight to you.</p>
+      <a href="learn.html" class="btn-dark" style="margin-top:2rem;display:inline-block">Learn the Science</a>
+    </div>
+    <div class="reveal-right">
+      <div class="img-frame">
+        <img
+          src="t4-new.png"
+          alt="Close up of microgreens"
+          class="img-rounded"
+          data-img-slot="index_about">
+        <div class="img-badge">
+          <span class="img-badge-num">40×</span>
+          <span class="img-badge-label">More Nutrients</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURE STRIP ══════════════════════════════════════ -->
+<section class="section-sm bg-forest">
+  <div class="container">
+    <div class="feature-strip">
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i class="fa-solid fa-seedling"></i></div>
+        <h4 class="h4 white">Locally Grown</h4>
+        <p class="text-pale">Cultivated right here in Jamaica, in a controlled environment for peak quality and consistency.</p>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i class="fa-solid fa-calendar-days"></i></div>
+        <h4 class="h4 white">Saturday Harvest</h4>
+        <p class="text-pale">We harvest every Saturday morning and deliver the same day — so your greens travel from farm to door within hours.</p>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i class="fa-solid fa-truck"></i></div>
+        <h4 class="h4 white">Door-to-Door Delivery</h4>
+        <p class="text-pale">We deliver to your address the same Saturday we harvest — no waiting, no cold storage. Simply order before Friday at 12pm.</p>
+      </div>
+      <div class="feature-item reveal">
+        <div class="feature-icon"><i class="fa-solid fa-star"></i></div>
+        <h4 class="h4 white">Chef Quality</h4>
+        <p class="text-pale">Used by top restaurants worldwide. Now available for your home kitchen in Jamaica.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PRODUCTS PREVIEW ═══════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="text-center reveal" style="margin-bottom:4rem">
+      <span class="eyebrow">Our Varieties</span>
+      <h2 class="h2">Freshly Harvested<br><em>Every Saturday</em></h2>
+      <span class="gold-line center"></span>
+      <p class="lead">Each variety is selected for its unique flavour profile, nutritional density, and culinary versatility. All priced in Jamaican dollars.</p>
+    </div>
+
+    <div class="grid-3 products-preview">
+
+      <div class="product-preview-card reveal">
+        <div class="ppc-img-wrap">
+          <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBbhZT70rnxD7MRYxJbUj8bhlVyeHV_m6FeBrGMjBGCefnlJGN1jKOX1KJj5VQxKi3O7z3wbvJoQ6gR-1aJKHFtO5HN9pzD0mFH6EI8gJSwO8JuZ3L2dP4l5nAm7i5TNFYFjl_Jls=w1280" alt="Sunflower microgreens">
+        </div>
+        <div class="ppc-body">
+          <h4 class="h4">Sunflower</h4>
+          <p>Rich, nutty flavour with satisfying crunch. A customer favourite and perfect for salads.</p>
+          <span class="ppc-price">J$1,200 / 8oz</span>
+        </div>
+      </div>
+
+      <div class="product-preview-card reveal">
+        <div class="ppc-img-wrap">
+          <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBKflGNW85laLyPjQKHDqlHEWgX3XVtf3v4JqAGJXvYYJF3miqVjpK4YJDv8aL4vNGmFT7Rk5ZpkNxT5b13yI4ZxzMEpW7Jdadb0i5Jby-j_jVnCqFqOBJqbB5dkGmOSgUbJzHpk=w1280" alt="Radish microgreens">
+        </div>
+        <div class="ppc-body">
+          <h4 class="h4">Radish</h4>
+          <p>Bold, peppery kick that elevates any dish. High in antioxidants and vitamins C and E.</p>
+          <span class="ppc-price">J$1,100 / 8oz</span>
+        </div>
+      </div>
+
+      <div class="product-preview-card reveal">
+        <div class="ppc-img-wrap">
+          <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBZApdlU70p4gbqzPZ4SKjEpFLz-GOEaqveMaouJWrmJVFgGCYrknCbbFQGGtHnGhD5k-dFHPJQxWn-6ICEjVPkLO4EzqLO2Z4O5IB3BKbhERMJtT_T7b6E4ZaJhEJMMxwQLSsshh4=w1280" alt="Pea shoot microgreens">
+        </div>
+        <div class="ppc-body">
+          <h4 class="h4">Pea Shoots</h4>
+          <p>Sweet, delicate, and loaded with vitamins. Perfect garnish for soups and stir-fries.</p>
+          <span class="ppc-price">J$1,100 / 8oz</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="text-center" style="margin-top:3rem">
+      <a href="order.html" class="btn-gold btn-lg">View Full Menu &amp; Order</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PHOTO SPLIT: HOW WE GROW ══════════════════════════ -->
+<section class="section bg-cream">
+  <div class="container grid-2">
+    <div class="reveal-right" style="order:2">
+      <span class="eyebrow">Our Process</span>
+      <h2 class="h2">From Seed to<br><em>Your Table</em></h2>
+      <span class="gold-line"></span>
+      <p class="lead">We use no pesticides, no harmful chemicals — just clean growing media, careful attention, and time. Each tray is seeded by hand and monitored daily until the perfect moment to harvest.</p>
+      <ul class="process-list">
+        <li><span class="process-num">01</span><span>Seeds are carefully selected and soaked</span></li>
+        <li><span class="process-num">02</span><span>Planted in premium growing media</span></li>
+        <li><span class="process-num">03</span><span>Grown in our controlled environment</span></li>
+        <li><span class="process-num">04</span><span>Hand-harvested every Saturday morning</span></li>
+        <li><span class="process-num">05</span><span>Packed immediately and delivered same day — farm to door, Saturday</span></li>
+      </ul>
+      <a href="about.html" class="btn-outline" style="margin-top:2rem;display:inline-block">Our Full Story</a>
+    </div>
+    <div class="reveal-left" style="order:1">
+      <div class="multi-img-stack">
+        <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUCHPyii9eQLVPEiRG0YMwQ1Piq9pEjc2JcJiOAKj7QVJID1kSwQBH6tHKMFEPp_vfDl0fcbfzBv_aBj2k6LIb43VcX2eFuiEblvXunZXr4F2OsHhv9fxLSuVnJyNfmxhLMbFSdvr4=w1280" alt="Growing microgreens" class="stack-img stack-img-back">
+        <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUCs61GuOdlaJuI6bNAU7vxL2U3FRYzXMuB5X-IZHDvpM0jkM2KIJlFX6dkMi0mIxHx8Mz6wVpBlmH_e8mAJcgm9ZJJLFJmRKnBNQ0vC3wJOqxRPfj-RnPeRqR9hHbZ0zy4cXrMxE=w1280" alt="Microgreens trays" class="stack-img stack-img-front" data-img-slot="index_process">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ NUTRITION CALLOUT ══════════════════════════════════ -->
+<section class="section bg-forest">
+  <div class="container text-center">
+    <div class="reveal">
+      <span class="eyebrow">Why Microgreens?</span>
+      <h2 class="h2 white">Nutrition Science<br><em class="gold-italic">Meets Culinary Art</em></h2>
+      <span class="gold-line center"></span>
+      <p class="lead lead-white" style="margin-inline:auto">Studies from the University of Maryland found that microgreens contain 4–40 times the vitamins and antioxidants of mature vegetables. One small serving can deliver your daily requirement of Vitamin C, E, and K.</p>
+    </div>
+    <div class="stat-row reveal">
+      <div class="stat-box">
+        <span class="stat-num">40×</span>
+        <span class="stat-label">More Nutrients</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">100+</span>
+        <span class="stat-label">Plant Compounds</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">7–14</span>
+        <span class="stat-label">Days to Harvest</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">0</span>
+        <span class="stat-label">Pesticides Used</span>
+      </div>
+    </div>
+    <a href="learn.html" class="btn-gold btn-lg" style="margin-top:3rem">Explore the Science</a>
+  </div>
+</section>
+
+<!-- ══ DELIVERY SECTION ═══════════════════════════════════ -->
+<section class="section">
+  <div class="container grid-2">
+    <div class="reveal-left">
+      <span class="eyebrow">How It Works</span>
+      <h2 class="h2">From Our Farm<br><em>To Your Door</em></h2>
+      <span class="gold-line"></span>
+      <p class="lead">We make it simple. Choose your greens, tell us where to deliver, and we'll handle the rest. No pickup required — we come to you.</p>
+
+      <div class="steps-list">
+        <div class="step">
+          <div class="step-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+          <div>
+            <h4 class="h4">1. Choose Your Greens</h4>
+            <p>Browse our varieties and select the quantities you'd like. Mix and match for the perfect assortment.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-icon"><i class="fa-solid fa-location-dot"></i></div>
+          <div>
+            <h4 class="h4">2. Provide Your Address</h4>
+            <p>We deliver to your door. Simply share your full delivery address and contact details at checkout.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-icon"><i class="fa-solid fa-calendar-days"></i></div>
+          <div>
+            <h4 class="h4">3. Order Before Friday 12pm</h4>
+            <p>Orders close Friday at noon so we can plan Saturday's harvest perfectly for your order.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-icon"><i class="fa-solid fa-truck"></i></div>
+          <div>
+            <h4 class="h4">4. Delivered Same Day</h4>
+            <p>Harvested Saturday morning, at your door Saturday — no storage, no delays. Maximum freshness guaranteed.</p>
+          </div>
+        </div>
+      </div>
+
+      <a href="order.html" class="btn-gold" style="margin-top:2rem;display:inline-block">Start Your Order</a>
+    </div>
+    <div class="reveal-right">
+      <img
+        src="https://lh3.googleusercontent.com/sitesv/AA5AbUAziVpLgw_Mk2EyiQbF2ygVPQpXnz8hDIr85WNVruF1JAfRGO5jJq3xbpHg19q1gT-WwHZiMJi2P0G_Bg3jqFbLCfWgkP4M8oZT4-V9VpH16W0XGBMBhLDhHvMUB5Ib5qQm72j7E=w1280"
+        alt="Microgreens delivery"
+        class="img-rounded" style="width:100%;height:480px;object-fit:cover">
+    </div>
+  </div>
+</section>
+
+<!-- ══ CTA BANNER ═════════════════════════════════════════ -->
+<section class="cta-banner">
+  <div class="cta-banner-bg">
+    <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUCnjnGGXJyXWVaqwmj9mJPNK2w9jgRfbMOkORBUHHSE7V1hY1J_1QS74CrFsX_NJyBMWQfnHUzN1yp_vX9fQwmQ9fLkCJT5DJqpU7qUBX0_vUn7B7LBT5MQr2E5w9IkWfGjMr2tWo=w1280" alt="" data-img-slot="index_cta">
+    <div class="cta-banner-overlay"></div>
+  </div>
+  <div class="container text-center cta-banner-content reveal">
+    <span class="eyebrow">Ready to Try?</span>
+    <h2 class="h2 white">Taste the Difference<br><em>Fresh Makes</em></h2>
+    <span class="gold-line center"></span>
+    <p class="lead lead-white">Join Jamaicans who have discovered the extraordinary taste and nutrition of freshly harvested microgreens. Harvested Saturday morning, delivered to your door the same day. Order before Friday at 12pm.</p>
+    <a href="order.html" class="btn-gold btn-lg" style="margin-top:2rem">Order Before Friday Noon</a>
+  </div>
+</section>
+
+<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="footer-logo-text">Micro-Greens Farm Ja</span>
+        <p>Jamaica's first dedicated microgreens farm. Growing nature's most potent foods with care, pride, and passion.</p>
+        <div class="footer-social">
+          <a href="https://www.instagram.com/microgreensfarm_ja/" aria-label="Instagram" class="social-link" target="_blank" rel="noopener">IG</a>
+          <a href="https://wa.me/18762832127" aria-label="WhatsApp" class="social-link" target="_blank" rel="noopener">WA</a>
+        </div>
+      </div>
+      <div class="footer-nav-col">
+        <h5 class="footer-heading">Navigate</h5>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="learn.html">Learn More</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="order.html">Order</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-nav-col">
+        <h5 class="footer-heading">Order Info</h5>
+        <ul>
+          <li>Harvest: Every Saturday</li>
+          <li>Order Deadline: Friday 12pm</li>
+          <li>Same-day Saturday delivery</li>
+          <li>J$500 delivery fee</li>
+        </ul>
+      </div>
+      <div class="footer-nav-col">
+        <h5 class="footer-heading">Legal</h5>
+        <ul>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+          <li><a href="cookies.html">Cookie Policy</a></li>
+          <li><a href="terms.html">Terms of Use</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="gold-rule" style="margin:2.5rem 0 1.5rem">
+    <div class="footer-bottom">
+      <p>&copy; <span id="yr"></span> Micro-Greens Farm Ja. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="privacy.html">Privacy</a>
+        <a href="cookies.html">Cookies</a>
+        <a href="terms.html">Terms</a>      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="back-top" aria-label="Back to top">↑</button>
+
+<script src="js/main.js"></script>
+<script src="js/overrides.js"></script>
+<script src="js/cookie-consent.js" defer></script>
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ── Announcement Bar ─────────────────────────────────────────── */
+(function(){
+  var HARVEST_DATE = new Date('2026-06-27T00:00:00');
+  var bar   = document.getElementById('ann-bar');
+  var close = document.getElementById('ann-close');
+  if (!bar) return;
+
+  var dismissed  = sessionStorage.getItem('ann_dismissed') === '1';
+  var stillValid = new Date() < HARVEST_DATE;   /* hide after harvest day */
+
+  if (!dismissed && stillValid) {
+    bar.style.display = '';
+    document.body.classList.add('has-ann');
+  }
+
+  if (close) {
+    close.addEventListener('click', function(){
+      bar.style.display = 'none';
+      document.body.classList.remove('has-ann');
+      sessionStorage.setItem('ann_dismissed', '1');
+    });
+  }
+})();
+</script>
+</body>
+</html>

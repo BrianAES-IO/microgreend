@@ -1,0 +1,30 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+
+# Logs & temp
+*.log
+*.tmp
+*.bak
+
+# Local environment / secrets (don't commit if you add any)
+.env
+.env.local
+
+# Node / build artifacts (in case you add a build step later)
+node_modules/
+dist/
+.cache/
+
+# Backup / scratch files in this project
+*backup*
+*scratch*
