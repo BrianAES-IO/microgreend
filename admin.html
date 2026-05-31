@@ -6,6 +6,11 @@
   <title>Admin Console | Micro-Greens Farm Ja</title>
   <!-- SheetJS – client-side Excel generation, no server needed -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous"></script>
+  <!-- Firebase compat SDK for cross-device data sync -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="js/firebase-sync.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -704,13 +709,20 @@
       <h1>Admin Console</h1>
       <p>Micro-Greens Farm Ja</p>
     </div>
-    <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+    <div class="login-error" id="loginError">Incorrect email or password. Please try again.</div>
     <form id="loginForm">
       <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="admin@email.com" autocomplete="email" autofocus required />
+      </div>
+      <div class="form-group">
         <label for="loginPass">Password</label>
-        <input type="password" id="loginPass" placeholder="Enter admin password" autofocus required />
+        <input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password" required />
       </div>
       <button type="submit" class="login-btn" id="loginBtn">Sign In →</button>
+      <div style="text-align:center;margin-top:.85rem">
+        <a href="#" id="forgotPassLink" style="font-size:.78rem;color:var(--text-sub)">Forgot password?</a>
+      </div>
     </form>
     <div class="login-hint">Authorised personnel only.</div>
   </div>
@@ -813,8 +825,9 @@
       <!-- ── DASHBOARD TAB ── -->
       <div class="tab-pane active fade-in" id="tab-dashboard">
         <div class="page-header">
-          <div><h2>Dashboard</h2><p>Live overview of your farm orders and revenue</p></div>
+          <div><h2>Dashboard</h2><p>Live overview of your farm orders and revenue <span id="cloudSyncStatus" style="font-size:.72rem;margin-left:.5rem;padding:.15rem .55rem;border-radius:var(--r-pill);background:#dbeafe;color:#1e40af">☁ Cloud sync: connecting…</span></p></div>
           <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="migrateToCloud()" title="One-time: push existing localStorage orders to the cloud database">☁ Migrate to Cloud</button>
             <button class="btn btn-excel" onclick="downloadExcel()">⬇ Export Excel</button>
             <button class="btn btn-primary" onclick="refreshAll()">↻ Refresh</button>
           </div>
@@ -2440,59 +2453,189 @@ function updateOrderStatus(id, newStatus) {
   o.statusHistory.push({ status: newStatus, timestamp: new Date().toISOString() });
   if (newStatus === 'delivered') o.deliveredAt = new Date().toISOString();
   saveOrders(orders);
+  /* Push the single updated order to Firestore so other devices see it instantly */
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+    window.MGFJ_Sync.updateOrder(id, {
+      status: o.status,
+      statusHistory: o.statusHistory,
+      deliveredAt: o.deliveredAt || null,
+      paymentMethod: o.paymentMethod || null
+    });
+  }
   refreshAll();
 }
 
 /* ════════════════════════════════════════════════
-   AUTH
+   AUTH — Firebase Auth (email + password)
 ════════════════════════════════════════════════ */
-document.getElementById('loginForm').addEventListener('submit', async e => {
+let _ordersUnsubscribe = null;
+let _adminInitialised  = false;
+
+function showAdminShell() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminShell').classList.add('visible');
+  seedIfEmpty();
+  if (!_adminInitialised) { initAdmin(); _adminInitialised = true; }
+  else { refreshAll(); }
+  if (window._startIdleTimer) window._startIdleTimer();
+  startCloudSync();
+}
+function showLoginScreen() {
+  document.getElementById('loginScreen').style.display = '';
+  document.getElementById('adminShell').classList.remove('visible');
+  stopCloudSync();
+}
+
+/* Real-time listener — keeps localStorage in sync with Firestore.
+   Existing get/save functions read/write localStorage, so once this
+   listener is running, every device sees every order in real time. */
+function startCloudSync() {
+  if (!window.MGFJ_Sync || !window.MGFJ_Sync.ready()) {
+    console.warn('[admin] Cloud sync unavailable — running in local-only mode');
+    return;
+  }
+  if (_ordersUnsubscribe) return; /* already running */
+  _ordersUnsubscribe = window.MGFJ_Sync.subscribeOrders(function(cloudOrders) {
+    /* Merge cloud orders with any local-only orders (orders made before sync was set up) */
+    const local = JSON.parse(localStorage.getItem('mgfj_orders') || '[]');
+    const cloudIds = new Set(cloudOrders.map(function(o){ return o.id; }));
+    const localOnly = local.filter(function(o){ return !cloudIds.has(o.id); });
+    const merged = cloudOrders.concat(localOnly);
+    localStorage.setItem('mgfj_orders', JSON.stringify(merged));
+    /* Trigger admin re-render if we're looking at orders/dashboard/delivery */
+    if (typeof refreshAll === 'function' && _adminInitialised) refreshAll();
+  });
+  console.log('[admin] Cloud sync started — listening for orders in real time');
+}
+function stopCloudSync() {
+  if (_ordersUnsubscribe) { _ordersUnsubscribe(); _ordersUnsubscribe = null; }
+}
+
+/* Login form handler */
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const pass = document.getElementById('loginPass').value;
-  const btn  = document.getElementById('loginBtn');
-  const err  = document.getElementById('loginError');
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const btn   = document.getElementById('loginBtn');
+  const err   = document.getElementById('loginError');
   err.classList.remove('show');
   btn.innerHTML = '<span class="spinner"></span> Signing in…';
   btn.disabled  = true;
 
-  try {
-    const hash = await hashPassword(pass);
-    if (hash === PASS_HASH) {
-      sessionStorage.setItem('mgfj_admin', '1');
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('adminShell').classList.add('visible');
-      seedIfEmpty();
-      initAdmin();
-      if (window._startIdleTimer) window._startIdleTimer();
-    } else {
-      err.classList.add('show');
-      btn.textContent = 'Sign In →';
-      btn.disabled = false;
-      document.getElementById('loginPass').value = '';
-      document.getElementById('loginPass').focus();
-    }
-  } catch {
-    err.textContent = 'Login error — please try again.';
+  if (!window.MGFJ_Auth || !window.MGFJ_Auth.ready()) {
+    err.textContent = 'Authentication service unavailable. Check your internet connection and reload.';
     err.classList.add('show');
     btn.textContent = 'Sign In →';
     btn.disabled = false;
+    return;
+  }
+
+  try {
+    await window.MGFJ_Auth.signIn(email, pass);
+    /* onAuthChange below will fire showAdminShell */
+  } catch (e2) {
+    console.error('Login failed', e2);
+    err.textContent = e2.code === 'auth/invalid-credential' || e2.code === 'auth/wrong-password' || e2.code === 'auth/user-not-found'
+      ? 'Incorrect email or password.'
+      : (e2.message || 'Login error — please try again.');
+    err.classList.add('show');
+    btn.textContent = 'Sign In →';
+    btn.disabled = false;
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+  }
+});
+
+/* Forgot password */
+document.getElementById('forgotPassLink').addEventListener('click', async function(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { alert('Enter your email above first, then click "Forgot password"'); return; }
+  try {
+    await window.MGFJ_Auth.sendPasswordReset(email);
+    alert('Password reset email sent to ' + email);
+  } catch (e2) {
+    alert('Could not send reset email: ' + (e2.message || e2.code));
   }
 });
 
 function logout() {
-  sessionStorage.removeItem('mgfj_admin');
-  sessionStorage.removeItem('mgfj_admin_key');
-  location.replace('index.html');
+  stopCloudSync();
+  if (window.MGFJ_Auth && window.MGFJ_Auth.ready()) {
+    window.MGFJ_Auth.signOut().finally(function(){
+      sessionStorage.removeItem('mgfj_admin_key');
+      location.replace('index.html');
+    });
+  } else {
+    sessionStorage.removeItem('mgfj_admin_key');
+    location.replace('index.html');
+  }
 }
 
-// Auto-login if session active
-if (sessionStorage.getItem('mgfj_admin')) {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('adminShell').classList.add('visible');
-  seedIfEmpty();
-  // init on next tick
-  setTimeout(function(){ initAdmin(); if (window._startIdleTimer) window._startIdleTimer(); }, 0);
+/* Auto-login if Firebase session is active (Firebase persists across reloads) */
+function startAuthWatcher() {
+  if (!window.MGFJ_Auth || !window.MGFJ_Auth.ready()) {
+    /* Firebase not loaded — fall back to login screen */
+    showLoginScreen();
+    return;
+  }
+  window.MGFJ_Auth.onAuthChange(function(user) {
+    if (user) showAdminShell();
+    else showLoginScreen();
+  });
 }
+/* Wait a tick for firebase-sync.js to initialise before checking auth */
+setTimeout(startAuthWatcher, 100);
+
+/* One-time migration: push existing localStorage orders/messages/leads to Firestore.
+   Safe to run more than once — uses merge writes so duplicates overwrite, not duplicate. */
+async function migrateToCloud() {
+  if (!window.MGFJ_Sync || !window.MGFJ_Sync.ready()) {
+    alert('Cloud sync is not connected. Make sure you are signed in and online.');
+    return;
+  }
+  if (!confirm('Push all locally-stored orders, messages, and leads to the cloud?\n\nThis is a one-time setup step. It is safe to run more than once.')) return;
+  const toast = document.createElement('div');
+  toast.className = 'admin-toast';
+  toast.textContent = '☁ Migrating…';
+  document.body.appendChild(toast);
+  try {
+    const res = await window.MGFJ_Sync.migrateLocalStorageToFirestore(function(msg) {
+      toast.textContent = '☁ ' + msg;
+    });
+    toast.remove();
+    if (res.ok) {
+      const r = res.results;
+      const summary = '✅ Migration complete!\n\nOrders: ' + r.orders + '\nMessages: ' + r.messages + '\nLeads: ' + r.leads + (r.errors.length ? '\n\nErrors: ' + r.errors.length : '');
+      alert(summary);
+    } else {
+      alert('Migration failed: ' + (res.error || 'unknown error'));
+    }
+  } catch (e) {
+    toast.remove();
+    alert('Migration error: ' + e.message);
+  }
+}
+
+/* Update sync status badge */
+function updateSyncStatus() {
+  const el = document.getElementById('cloudSyncStatus');
+  if (!el) return;
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready() && _ordersUnsubscribe) {
+    el.textContent = '☁ Cloud sync: live';
+    el.style.background = '#dcfce7';
+    el.style.color = '#166534';
+  } else if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+    el.textContent = '☁ Cloud sync: connecting…';
+    el.style.background = '#fef3c7';
+    el.style.color = '#92400e';
+  } else {
+    el.textContent = '☁ Cloud sync: offline';
+    el.style.background = '#fee2e2';
+    el.style.color = '#991b1b';
+  }
+}
+setInterval(updateSyncStatus, 3000);
 
 /* ════════════════════════════════════════════════
    INIT

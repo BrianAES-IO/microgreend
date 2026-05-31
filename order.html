@@ -400,6 +400,11 @@
 
 <button class="back-top" id="back-top" aria-label="Back to top">↑</button>
 
+<!-- Firebase compat SDK (loads BEFORE firebase-sync.js so the global is available) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-sync.js"></script>
 <script src="js/main.js"></script>
 <script src="js/overrides.js"></script>
 <script src="js/cookie-consent.js" defer></script>
@@ -726,9 +731,19 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
   };
 
   try {
+    /* Local backup (in case Firestore fails / offline) */
     const existing = JSON.parse(localStorage.getItem('mgfj_orders') || '[]');
     existing.unshift(order);
     localStorage.setItem('mgfj_orders', JSON.stringify(existing));
+
+    /* Push to Firestore so it appears in the admin dashboard on any device */
+    if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+      window.MGFJ_Sync.submitOrder(order).then(function(ok) {
+        if (!ok) console.warn('Order saved locally but not synced to cloud — will retry next visit');
+      });
+    } else {
+      console.warn('Cloud sync not ready — order saved locally only');
+    }
 
     /* Record discount use */
     if (discountCode && window.MGFJ_Discount) {
