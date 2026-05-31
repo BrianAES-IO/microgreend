@@ -2610,26 +2610,66 @@ function showLoginScreen() {
 /* Real-time listener — keeps localStorage in sync with Firestore.
    Existing get/save functions read/write localStorage, so once this
    listener is running, every device sees every order in real time. */
+let _stateUnsubs = [];
 function startCloudSync() {
   if (!window.MGFJ_Sync || !window.MGFJ_Sync.ready()) {
     console.warn('[admin] Cloud sync unavailable — running in local-only mode');
     return;
   }
   if (_ordersUnsubscribe) return; /* already running */
+
+  /* Orders */
   _ordersUnsubscribe = window.MGFJ_Sync.subscribeOrders(function(cloudOrders) {
-    /* Merge cloud orders with any local-only orders (orders made before sync was set up) */
     const local = JSON.parse(localStorage.getItem('mgfj_orders') || '[]');
     const cloudIds = new Set(cloudOrders.map(function(o){ return o.id; }));
     const localOnly = local.filter(function(o){ return !cloudIds.has(o.id); });
     const merged = cloudOrders.concat(localOnly);
     localStorage.setItem('mgfj_orders', JSON.stringify(merged));
-    /* Trigger admin re-render if we're looking at orders/dashboard/delivery */
     if (typeof refreshAll === 'function' && _adminInitialised) refreshAll();
   });
-  console.log('[admin] Cloud sync started — listening for orders in real time');
+
+  /* Helper: subscribe to a public_state or admin_state doc and mirror into localStorage */
+  function syncStateInto(localKey, subscribeFn) {
+    const unsub = subscribeFn(function(data) {
+      if (data === null || data === undefined) return;
+      try {
+        localStorage.setItem(localKey, typeof data === 'string' ? data : JSON.stringify(data));
+        if (typeof refreshAll === 'function' && _adminInitialised) refreshAll();
+      } catch (e) { console.warn('state sync into ' + localKey + ' failed', e); }
+    });
+    _stateUnsubs.push(unsub);
+  }
+  /* Public state (also lets admin see live changes from other admin devices) */
+  syncStateInto('mgfj_products',   window.MGFJ_Sync.subscribeProducts.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_images',     window.MGFJ_Sync.subscribeImages.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_discounts',  window.MGFJ_Sync.subscribeDiscounts.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_affiliates', window.MGFJ_Sync.subscribeAffiliates.bind(window.MGFJ_Sync));
+
+  /* Admin-only state */
+  const adminKeys = [
+    ['mgfj_b2b_clients',     'b2b_clients'],
+    ['mgfj_b2b_orders',      'b2b_orders'],
+    ['mgfj_expenses',        'expenses'],
+    ['mgfj_employees',       'employees'],
+    ['mgfj_payroll_history', 'payroll_history'],
+    ['mgfj_plantings',       'plantings'],
+    ['mgfj_planting_goals',  'planting_goals'],
+    ['mgfj_audit',           'audit'],
+    ['mgfj_blog',            'blog_posts'],
+    ['mgfj_marketing_posts', 'marketing_posts'],
+    ['mgfj_route_origin',    'route_origin'],
+    ['mgfj_route_overrides', 'route_overrides']
+  ];
+  adminKeys.forEach(function(pair){
+    syncStateInto(pair[0], function(cb){ return window.MGFJ_Sync.subscribeAdminState(pair[1], cb); });
+  });
+
+  console.log('[admin] Cloud sync started — listening for orders + state in real time');
 }
 function stopCloudSync() {
   if (_ordersUnsubscribe) { _ordersUnsubscribe(); _ordersUnsubscribe = null; }
+  _stateUnsubs.forEach(function(fn){ try { fn(); } catch(e){} });
+  _stateUnsubs = [];
 }
 
 /* Login form handler */
@@ -3386,7 +3426,7 @@ function getProducts() {
   try { const s = JSON.parse(localStorage.getItem('mgfj_products')||'[]'); return s.length ? s : [...DEFAULT_PRODUCTS]; }
   catch { return [...DEFAULT_PRODUCTS]; }
 }
-function saveProductsDB(p) { localStorage.setItem('mgfj_products', JSON.stringify(p)); }
+function saveProductsDB(p) { localStorage.setItem('mgfj_products', JSON.stringify(p)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveProducts(p); }
 /* Backward-compat alias */
 const ALL_PRODUCTS = DEFAULT_PRODUCTS;
 
@@ -3670,7 +3710,7 @@ function saveAvailability() {
 
 /* ── BLOG MANAGEMENT ── */
 function getBlogPosts() { return JSON.parse(localStorage.getItem('mgfj_blog') || '[]'); }
-function saveBlogPosts(posts) { localStorage.setItem('mgfj_blog', JSON.stringify(posts)); }
+function saveBlogPosts(posts) { localStorage.setItem('mgfj_blog', JSON.stringify(posts)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('blog_posts', posts); }
 
 function renderBlog() {
   const posts = getBlogPosts().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
@@ -3792,6 +3832,10 @@ const IMAGE_SLOTS = [
 ];
 
 function getSiteImages() { return JSON.parse(localStorage.getItem('mgfj_images') || '{}'); }
+function saveSiteImages(imgs) {
+  saveSiteImages(imgs);
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveImages(imgs);
+}
 
 function renderImagesForm() {
   const imgs = getSiteImages();
@@ -3857,7 +3901,7 @@ function handleImgUpload(slotId, input) {
     const dataUrl = e.target.result;
     const imgs = getSiteImages();
     imgs[slotId] = dataUrl;
-    localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+    saveSiteImages(imgs);
     renderImagesForm();
     showToast(`Image uploaded for "${IMAGE_SLOTS.find(s=>s.id===slotId)?.label || slotId}"!`, 'success');
   };
@@ -3874,14 +3918,14 @@ function saveImageSlot(slotId) {
     delete imgs[slotId];
     showToast('Image removed.', 'success');
   }
-  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  saveSiteImages(imgs);
   renderImagesForm();
 }
 
 function removeImageSlot(slotId) {
   const imgs = getSiteImages();
   delete imgs[slotId];
-  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  saveSiteImages(imgs);
   renderImagesForm();
   showToast('Image removed.', 'success');
 }
@@ -3896,7 +3940,7 @@ function saveImages() {
     if (v) imgs[slot.id] = v;
     else if (!imgs[slot.id]) delete imgs[slot.id]; // only remove URL-type; keep file uploads
   });
-  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  saveSiteImages(imgs);
   showToast('All image URLs saved! Refresh any page to see changes.', 'success');
   renderImagesForm();
 }
@@ -4642,7 +4686,7 @@ function saveProdImgFromUrl(pid) {
   const url = document.getElementById(`pm-imgurl-${pid}`)?.value.trim();
   const imgs = getSiteImages();
   if (url) imgs['img_'+pid] = url; else delete imgs['img_'+pid];
-  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  saveSiteImages(imgs);
   renderProductManageGrid();
   if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
   showToast(url ? 'Product image saved!' : 'Image cleared', 'success');
@@ -4697,7 +4741,7 @@ function handleProdImgUpload(pid, input) {
   reader.onload = e => {
     const imgs = getSiteImages();
     imgs['img_'+pid] = e.target.result;
-    localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+    saveSiteImages(imgs);
     renderProductImagesGrid();
     showToast(`Image saved for ${pid}!`, 'success');
   };
@@ -4708,7 +4752,7 @@ function saveProdImgSlot(pid) {
   const url = document.getElementById(`prodimgurl-${pid}`)?.value.trim();
   const imgs = getSiteImages();
   if (url) imgs['img_'+pid] = url; else delete imgs['img_'+pid];
-  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  saveSiteImages(imgs);
   renderProductImagesGrid();
   showToast('Product image saved!', 'success');
 }
@@ -4716,7 +4760,7 @@ function saveProdImgSlot(pid) {
 function removeProdImg(pid) {
   const imgs = getSiteImages();
   delete imgs['img_'+pid];
-  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  saveSiteImages(imgs);
   renderProductImagesGrid();
   showToast('Product image removed.', 'success');
 }
@@ -4773,7 +4817,7 @@ function saveProduct() {
   if (imgUrl) {
     const imgs = getSiteImages();
     imgs['img_'+updated.id] = imgUrl;
-    localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+    saveSiteImages(imgs);
   }
 
   if (existing) {
@@ -4800,7 +4844,7 @@ function deleteProduct(id) {
 ══════════════════════════════════════════════════════════ */
 let discountFilter = 'all';
 function getDiscounts() { try { return JSON.parse(localStorage.getItem('mgfj_discounts')||'[]'); } catch { return []; } }
-function saveDiscountsDB(d) { localStorage.setItem('mgfj_discounts', JSON.stringify(d)); }
+function saveDiscountsDB(d) { localStorage.setItem('mgfj_discounts', JSON.stringify(d)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveDiscounts(d); }
 
 function setDiscountFilter(f, btn) {
   discountFilter = f;
@@ -4934,7 +4978,7 @@ function deleteDiscount(id) {
    AFFILIATES MODULE
 ══════════════════════════════════════════════════════════ */
 function getAffiliates() { try { return JSON.parse(localStorage.getItem('mgfj_affiliates')||'[]'); } catch { return []; } }
-function saveAffiliatesDB(a) { localStorage.setItem('mgfj_affiliates', JSON.stringify(a)); }
+function saveAffiliatesDB(a) { localStorage.setItem('mgfj_affiliates', JSON.stringify(a)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAffiliates(a); }
 
 function renderAffiliates() {
   const affs  = getAffiliates();
@@ -5075,7 +5119,7 @@ const GREENS_GROW = {
 
 /* Storage */
 function getPlantings() { try { return JSON.parse(localStorage.getItem('mgfj_plantings')||'[]'); } catch { return []; } }
-function savePlantings(p) { localStorage.setItem('mgfj_plantings', JSON.stringify(p)); }
+function savePlantings(p) { localStorage.setItem('mgfj_plantings', JSON.stringify(p)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('plantings', p); }
 /* Rich goal format: {greenId: {active:true, containers:10, costPerTray:400}} */
 function getGoalsRich() {
   try {
@@ -5103,7 +5147,7 @@ function getGoalsRich() {
   Object.keys(GREENS_GROW).forEach(function(k){ defaults[k] = { active: true, containers: 10, costPerTray: 400 }; });
   return defaults;
 }
-function saveGoalsRich(g) { localStorage.setItem('mgfj_planting_goals', JSON.stringify(g)); }
+function saveGoalsRich(g) { localStorage.setItem('mgfj_planting_goals', JSON.stringify(g)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('planting_goals', g); }
 /* Backward-compat: returns {greenId: containers} with 0 for inactive */
 function getGoals() {
   var r = getGoalsRich();
@@ -5691,9 +5735,9 @@ setInterval(function() {
    B2B (HOTELS & RESTAURANTS) MODULE
 ══════════════════════════════════════════════════════════ */
 function getB2BClients() { try { return JSON.parse(localStorage.getItem('mgfj_b2b_clients')||'[]'); } catch { return []; } }
-function saveB2BClients(c) { localStorage.setItem('mgfj_b2b_clients', JSON.stringify(c)); }
+function saveB2BClients(c) { localStorage.setItem('mgfj_b2b_clients', JSON.stringify(c)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('b2b_clients', c); }
 function getB2BOrders()  { try { return JSON.parse(localStorage.getItem('mgfj_b2b_orders')||'[]'); } catch { return []; } }
-function saveB2BOrders(o) { localStorage.setItem('mgfj_b2b_orders', JSON.stringify(o)); }
+function saveB2BOrders(o) { localStorage.setItem('mgfj_b2b_orders', JSON.stringify(o)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('b2b_orders', o); }
 
 function renderB2B() {
   renderB2BClients();
@@ -6066,10 +6110,11 @@ function getRouteOrigin() { return localStorage.getItem('mgfj_route_origin') || 
 function saveRouteOrigin() {
   var v = document.getElementById('routeOrigin')?.value.trim() || '';
   localStorage.setItem('mgfj_route_origin', v);
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('route_origin', v);
   if (typeof showToast==='function') showToast('Starting point saved','success');
 }
 function getRouteOverrides() { try { return JSON.parse(localStorage.getItem('mgfj_route_overrides')||'{}'); } catch { return {}; } }
-function saveRouteOverrides(o) { localStorage.setItem('mgfj_route_overrides', JSON.stringify(o)); }
+function saveRouteOverrides(o) { localStorage.setItem('mgfj_route_overrides', JSON.stringify(o)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('route_overrides', o); }
 
 function getDeliveryStopsForView() {
   var view = document.getElementById('routeView')?.value || 'saturday';
@@ -6298,7 +6343,7 @@ function openRouteInMaps() {
    ACCOUNTING MODULE
 ══════════════════════════════════════════════════════════ */
 function getExpenses()  { try { return JSON.parse(localStorage.getItem('mgfj_expenses')||'[]'); } catch { return []; } }
-function saveExpenses(e){ localStorage.setItem('mgfj_expenses', JSON.stringify(e)); }
+function saveExpenses(e){ localStorage.setItem('mgfj_expenses', JSON.stringify(e)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('expenses', e); }
 
 function addAuditEntry(action, detail, amount) {
   var log = [];
@@ -6306,6 +6351,7 @@ function addAuditEntry(action, detail, amount) {
   log.unshift({ at: new Date().toISOString(), action: action, detail: detail, amount: amount||0 });
   if (log.length > 500) log = log.slice(0, 500);
   localStorage.setItem('mgfj_audit', JSON.stringify(log));
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('audit', log);
 }
 
 var EXP_CATEGORIES = {
@@ -6634,7 +6680,7 @@ function exportFinancials() {
    HR & PAYROLL MODULE
 ══════════════════════════════════════════════════════════ */
 function getEmployees()  { try { return JSON.parse(localStorage.getItem('mgfj_employees')||'[]'); } catch { return []; } }
-function saveEmployees(e){ localStorage.setItem('mgfj_employees', JSON.stringify(e)); }
+function saveEmployees(e){ localStorage.setItem('mgfj_employees', JSON.stringify(e)); if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('employees', e); }
 
 function renderHR() {
   renderHRKpis();
@@ -6844,6 +6890,7 @@ function processPayroll() {
     totalNet:totalNet, totalEmployerCost:totalEmployerCost, details:details
   });
   localStorage.setItem('mgfj_payroll_history',JSON.stringify(history));
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAdminState('payroll_history', history);
 
   /* Also record as expense */
   var expenses = getExpenses();

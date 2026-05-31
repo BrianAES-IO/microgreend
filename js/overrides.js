@@ -215,4 +215,64 @@
   window.MGFJ.getProductImage = pid => imgs['img_' + pid] || null;
   window.MGFJ.applyImageOverrides = applyImageOverrides;
 
+  /* ══════════════════════════════════════════════════════
+     FIREBASE LIVE SYNC (customer-facing)
+     ────────────────────────────────────────────────────
+     Subscribes to public_state changes from Firestore so
+     admin updates (products, prices, images, discounts,
+     affiliates) reach customer browsers in real time.
+     Updates localStorage cache then re-renders / re-applies.
+     Gracefully no-ops if firebase-sync.js isn't loaded.
+     ══════════════════════════════════════════════════════ */
+  function startPublicSync() {
+    if (!window.MGFJ_Sync || !window.MGFJ_Sync.ready()) {
+      /* Retry shortly in case Firebase is still initialising */
+      setTimeout(startPublicSync, 1000);
+      return;
+    }
+
+    /* Images — refresh localStorage + re-apply on the page */
+    window.MGFJ_Sync.subscribeImages(function(data) {
+      if (!data || typeof data !== 'object') return;
+      try {
+        localStorage.setItem('mgfj_images', JSON.stringify(data));
+        /* Update the in-memory copy used by helpers */
+        Object.keys(window.MGFJ.imageOverrides).forEach(function(k){ delete window.MGFJ.imageOverrides[k]; });
+        Object.assign(window.MGFJ.imageOverrides, data);
+        /* Re-apply to the page */
+        applyImageOverrides();
+      } catch (e) { console.warn('[MGFJ] image sync apply failed', e); }
+    });
+
+    /* Products — refresh localStorage + tell any live page to re-render */
+    window.MGFJ_Sync.subscribeProducts(function(data) {
+      if (!Array.isArray(data)) return;
+      try {
+        localStorage.setItem('mgfj_products', JSON.stringify(data));
+        /* If on order page, ask it to re-render the product grid */
+        if (typeof window.renderProducts === 'function')      window.renderProducts();
+        if (typeof window.renderProductGrid === 'function')   window.renderProductGrid();
+        if (typeof window.renderSummary === 'function')       window.renderSummary();
+      } catch (e) { console.warn('[MGFJ] product sync apply failed', e); }
+    });
+
+    /* Discounts */
+    window.MGFJ_Sync.subscribeDiscounts(function(data) {
+      if (!Array.isArray(data)) return;
+      try { localStorage.setItem('mgfj_discounts', JSON.stringify(data)); }
+      catch (e) {}
+    });
+
+    /* Affiliates */
+    window.MGFJ_Sync.subscribeAffiliates(function(data) {
+      if (!Array.isArray(data)) return;
+      try { localStorage.setItem('mgfj_affiliates', JSON.stringify(data)); }
+      catch (e) {}
+    });
+
+    console.log('[MGFJ overrides] Public sync started — listening for admin changes');
+  }
+  /* Wait a tick for firebase-sync.js to finish initialising */
+  setTimeout(startPublicSync, 300);
+
 })();

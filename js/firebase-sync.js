@@ -164,6 +164,57 @@ window.MGFJ_Sync = {
       });
   },
 
+  /* ════════════════════════════════════════════════════════
+     STATE DOCS — generic sync for arbitrary key/value blobs
+     ────────────────────────────────────────────────────────
+     • public_state/<key>  — readable by anyone, writable only by admin
+     • admin_state/<key>   — admin only (both read & write)
+     Stored as { data: <anything-JSON-serializable>, _updatedAt: ts }
+     ════════════════════════════════════════════════════════ */
+
+  /* Generic save: writes a state document */
+  async _saveState(scope, key, data) {
+    if (!this.ready()) return false;
+    try {
+      await window._db.collection(scope).doc(key).set({
+        data: data,
+        _updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return true;
+    } catch (e) {
+      console.error('[MGFJ] _saveState ' + scope + '/' + key + ' failed', e);
+      return false;
+    }
+  },
+
+  /* Generic subscribe: fires callback(data) on every change */
+  _subscribeState(scope, key, onChange) {
+    if (!this.ready()) { onChange(null); return function(){}; }
+    return window._db.collection(scope).doc(key).onSnapshot(function(doc) {
+      const d = doc.data();
+      onChange(d ? d.data : null);
+    }, function(err) {
+      console.warn('[MGFJ] _subscribeState ' + scope + '/' + key + ':', err.message);
+    });
+  },
+
+  /* ── PUBLIC STATE (customer-readable) ── */
+  saveProducts(arr)      { return this._saveState('public_state', 'products', arr); },
+  subscribeProducts(cb)  { return this._subscribeState('public_state', 'products', cb); },
+
+  saveImages(obj)        { return this._saveState('public_state', 'images', obj); },
+  subscribeImages(cb)    { return this._subscribeState('public_state', 'images', cb); },
+
+  saveDiscounts(arr)     { return this._saveState('public_state', 'discounts', arr); },
+  subscribeDiscounts(cb) { return this._subscribeState('public_state', 'discounts', cb); },
+
+  saveAffiliates(arr)    { return this._saveState('public_state', 'affiliates', arr); },
+  subscribeAffiliates(cb){ return this._subscribeState('public_state', 'affiliates', cb); },
+
+  /* ── ADMIN-ONLY STATE ── */
+  saveAdminState(key, data)      { return this._saveState('admin_state', key, data); },
+  subscribeAdminState(key, cb)   { return this._subscribeState('admin_state', key, cb); },
+
   /* ── ONE-TIME MIGRATION FROM LOCALSTORAGE ── */
   /* Pushes everything currently in admin's localStorage up to Firestore.
      Safe to run multiple times — uses merge so duplicates are overwritten,
@@ -219,6 +270,37 @@ window.MGFJ_Sync = {
         }), { merge: true });
         results.leads++;
       } catch (e) { results.errors.push('lead: ' + e.message); }
+    }
+
+    /* Public state docs */
+    const publicMap = [
+      { key:'mgfj_products',  fn:'saveProducts',   label:'products'   },
+      { key:'mgfj_images',    fn:'saveImages',     label:'images'     },
+      { key:'mgfj_discounts', fn:'saveDiscounts',  label:'discounts'  },
+      { key:'mgfj_affiliates',fn:'saveAffiliates', label:'affiliates' }
+    ];
+    for (const p of publicMap) {
+      progressCb('Migrating ' + p.label + '…');
+      const val = (function(){ try { return JSON.parse(localStorage.getItem(p.key)); } catch { return null; } })();
+      if (val !== null && val !== undefined) {
+        try { await window.MGFJ_Sync[p.fn](val); results[p.label] = Array.isArray(val) ? val.length : 1; }
+        catch (e) { results.errors.push(p.label + ': ' + e.message); }
+      }
+    }
+
+    /* Admin-only state docs */
+    const adminKeys = [
+      'b2b_clients','b2b_orders','expenses','employees','payroll',
+      'plantings','planting_goals','audit','marketing_posts','blog_posts',
+      'route_origin','route_overrides'
+    ];
+    for (const k of adminKeys) {
+      const localKey = 'mgfj_' + k;
+      const val = (function(){ try { return JSON.parse(localStorage.getItem(localKey)); } catch { return null; } })();
+      if (val !== null && val !== undefined) {
+        try { await window.MGFJ_Sync.saveAdminState(k, val); results['admin_'+k] = Array.isArray(val) ? val.length : 1; }
+        catch (e) { results.errors.push(k + ': ' + e.message); }
+      }
     }
 
     progressCb('Done.');
