@@ -1261,3 +1261,46 @@ body.has-ann .page-hero-content{padding-top:calc(10rem + var(--ann-height))}
   .bulk-cta-card{ padding:1.75rem 1.25rem; }
   .bulk-cta-img{ display:none; }
 }
+
+/* ════════════════════════════════════════════════════════
+   GLOBAL MOBILE POLISH (≤768px and ≤480px)
+   Catches common cross-page touch / sizing / readability
+   issues that aren't covered by component-specific queries.
+   ════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  /* Tighter container padding on phones */
+  .container { padding-left:1rem; padding-right:1rem; }
+  /* Hero text scales down */
+  .display { font-size:clamp(2rem,8vw,2.85rem); line-height:1.05; }
+  .h2 { font-size:clamp(1.5rem,6vw,2.1rem); }
+  .lead { font-size:.95rem; }
+  /* Hero actions stack and full-width on small screens */
+  .hero-actions { flex-direction:column; align-items:stretch; gap:.65rem; }
+  .hero-actions .btn-lg { width:100%; justify-content:center; }
+  .hero-trust { flex-direction:column; gap:.45rem; font-size:.78rem; }
+  /* Announcement bar wraps neatly */
+  .ann-bar-inner { flex-wrap:wrap; gap:.4rem; font-size:.78rem; padding:.55rem .85rem; }
+  /* Section padding reduces */
+  .section { padding:3rem 0; }
+  .section-sm { padding:2rem 0; }
+  /* Cards / boxes get tighter padding */
+  .luxury-card { padding:1.5rem; }
+  /* Inputs are 16px+ to prevent iOS zoom-on-focus */
+  input, select, textarea { font-size:16px; }
+  /* Buttons should be at least 44px tall for touch targets */
+  .btn, .btn-gold, .btn-dark, .btn-outline, button[class*="btn"] { min-height:44px; padding-top:.65rem; padding-bottom:.65rem; }
+}
+
+@media(max-width:480px){
+  /* Even tighter on tiny screens */
+  .container { padding-left:.85rem; padding-right:.85rem; }
+  .display { font-size:clamp(1.75rem,9vw,2.25rem); }
+  .eyebrow { font-size:.7rem; }
+  /* Footer condenses */
+  .footer-bottom { flex-direction:column; gap:.6rem; text-align:center; }
+  .footer-legal { justify-content:center; flex-wrap:wrap; gap:.85rem; }
+  /* Order page product cards: image goes full-width with reduced height */
+  .product-card-order { gap:.65rem; }
+  /* Cart summary line items wrap better */
+  .order-summary-row { font-size:.85rem; }
+}

@@ -257,18 +257,136 @@
     .status-select { padding:.5rem .9rem; border:1.5px solid var(--border); border-radius:var(--r-pill); font-size:.82rem; font-family:inherit; outline:none; cursor:pointer; transition:border-color var(--t); }
     .status-select:focus { border-color:var(--accent); }
 
-    /* Responsive */
-    @media (max-width:900px) {
-      .admin-sidebar { width:64px; padding:.75rem .4rem; }
-      .admin-sidebar .sidebar-section-label, .nav-item span:not(.nav-icon), .nav-badge { display:none; }
-      .nav-item { justify-content:center; padding:.7rem; }
+    /* Mobile menu button (hidden on desktop) */
+    .mobile-menu-btn { display:none; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); color:#fff; width:38px; height:38px; border-radius:8px; font-size:1.3rem; align-items:center; justify-content:center; flex-shrink:0; }
+    .mobile-menu-btn:hover { background:rgba(255,255,255,.15); }
+    /* Sidebar backdrop (hidden on desktop) */
+    .sidebar-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:998; opacity:0; transition:opacity .2s; pointer-events:none; }
+    .sidebar-backdrop.visible { opacity:1; pointer-events:auto; display:block; }
+
+    /* ─── RESPONSIVE: Tablet & icon-only sidebar (901px–1024px) ─── */
+    @media (max-width:1024px) {
       .delivery-cols { grid-template-columns:1fr; }
       .chart-grid { grid-template-columns:1fr; }
       .info-grid { grid-template-columns:1fr; }
+      #dashChartRow { grid-template-columns:1fr !important; }
+      .post-composer-grid { grid-template-columns:1fr !important; }
+      .b2b-card-top { gap:.5rem; }
     }
-    @media (max-width:600px) {
-      .admin-main { padding:1rem; }
-      .kpi-grid { grid-template-columns:1fr 1fr; }
+    @media (max-width:900px) and (min-width:769px) {
+      .admin-sidebar { width:64px; padding:.75rem .4rem; }
+      .admin-sidebar .sidebar-section-label, .nav-item span:not(.nav-icon), .nav-badge { display:none; }
+      .nav-item { justify-content:center; padding:.7rem; }
+    }
+
+    /* ─── RESPONSIVE: Mobile (≤768px) — sidebar becomes slide-in drawer ─── */
+    @media (max-width:768px) {
+      .mobile-menu-btn { display:inline-flex; }
+      .admin-topbar { padding:0 .85rem; height:54px; }
+      .topbar-logo { width:28px; height:28px; font-size:.9rem; }
+      .topbar-title { font-size:.85rem; }
+      .topbar-sub { display:none; }
+      .topbar-badge { display:none; }
+      .topbar-right { gap:.4rem; }
+      .logout-btn { padding:.3rem .65rem; font-size:.72rem; }
+      /* Sidebar slides in from left */
+      .admin-sidebar {
+        position:fixed; top:54px; left:0; bottom:0;
+        width:240px; z-index:999;
+        transform:translateX(-100%);
+        transition:transform .25s ease;
+        padding:.75rem;
+      }
+      .admin-sidebar.mobile-open { transform:translateX(0); box-shadow:4px 0 24px rgba(0,0,0,.3); }
+      .admin-sidebar .sidebar-section-label,
+      .nav-item span:not(.nav-icon),
+      .nav-badge { display:inline-flex; }
+      .nav-item { justify-content:flex-start; }
+
+      .admin-main { padding:1rem .85rem; }
+      .page-header { flex-direction:column; align-items:stretch; gap:.75rem; }
+      .page-header > div:last-child { flex-wrap:wrap; }
+      .page-header h2 { font-size:1.25rem; }
+      .page-header p { font-size:.78rem; }
+
+      .kpi-grid { grid-template-columns:1fr 1fr; gap:.6rem; }
+      .kpi-card { padding:.85rem; }
+      .kpi-val { font-size:1.3rem; }
+      .kpi-label, .kpi-sub { font-size:.7rem; }
+
+      /* Sub-tabs: horizontal scroll instead of wrap */
+      .sub-tabs { overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+      .sub-tab { flex-shrink:0; white-space:nowrap; }
+
+      /* Multi-column grids stack */
+      .mf-row { grid-template-columns:1fr !important; }
+      .stats-grid, .product-grid, .grid-2, .grid-3 { grid-template-columns:1fr !important; }
+      .acc-grid, #accOverviewGrid, #b2bKpis, #trayKpis { grid-template-columns:1fr 1fr !important; }
+      .tax-result-grid { grid-template-columns:1fr 1fr !important; }
+      .quarterly-grid { grid-template-columns:1fr 1fr !important; }
+      .prod-summary-grid { grid-template-columns:1fr 1fr !important; }
+      .ig-post-mock { position:static; }
+      .ig-connect-card { flex-direction:column; }
+      .ig-status-badge { width:100%; }
+
+      /* Card-style adjustments */
+      .card { padding:1rem; }
+      .card-header { flex-direction:column; align-items:flex-start; gap:.4rem; padding:.85rem 1rem; }
+      .card-header h3 { font-size:.95rem; }
+
+      /* Modals: full-screen on mobile */
+      .modal-backdrop { padding:0; align-items:flex-end; }
+      .modal { width:100%; max-width:100% !important; max-height:92vh; border-radius:16px 16px 0 0; margin:0; }
+      .modal-body { padding:1rem !important; max-height:65vh; overflow-y:auto; }
+      .modal-header { padding:1rem; }
+      .modal-footer { padding:.85rem 1rem !important; }
+
+      /* Forms */
+      .form-group input, .form-group select, .form-group textarea,
+      .mf-group input, .mf-group select, .mf-group textarea { font-size:16px; } /* prevents iOS zoom */
+      .login-card { padding:2rem 1.5rem; }
+
+      /* Delivery cards stack */
+      .delivery-card { padding:.85rem; }
+      .dc-actions { width:100%; justify-content:flex-end; }
+      .dc-actions .btn { flex:1; min-width:0; justify-content:center; }
+
+      /* Goal cards stack inputs below */
+      .goal-card-v2 { grid-template-columns:auto auto 1fr; row-gap:.55rem; }
+      .goal-row-inputs, .goal-row-stats { grid-column:1/-1; justify-content:flex-start; }
+      .goal-row-stats { text-align:left; }
+
+      /* B2B client cards */
+      .b2b-card-top > div:last-child { width:100%; flex-wrap:wrap; }
+      .b2b-card-top .btn { flex:1; min-width:80px; justify-content:center; }
+
+      /* Tray / planting cards */
+      .tray-card { padding:.85rem; }
+      .tray-card-top { flex-direction:column; align-items:flex-start; }
+      .tray-actions { width:100%; }
+      .tray-actions .btn { flex:1; justify-content:center; }
+
+      /* Route stops */
+      .route-stop { flex-wrap:wrap; }
+      .stop-controls { width:100%; justify-content:flex-end; }
+
+      /* Buttons in headers shouldn't overflow */
+      .page-header > div:last-child .btn { flex:1 1 auto; justify-content:center; }
+    }
+
+    /* ─── RESPONSIVE: Small phones (≤480px) ─── */
+    @media (max-width:480px) {
+      .admin-main { padding:.75rem .65rem; }
+      .kpi-grid { grid-template-columns:1fr; }
+      .acc-grid, #accOverviewGrid, #b2bKpis, #trayKpis,
+      .tax-result-grid, .quarterly-grid, .prod-summary-grid { grid-template-columns:1fr !important; }
+      .topbar-title { font-size:.78rem; }
+      .modal-header h3 { font-size:1rem; }
+      .page-header h2 { font-size:1.15rem; }
+      /* Smaller table text on tiny screens */
+      .tbl-wrap table { font-size:.78rem; }
+      .tbl-wrap th, .tbl-wrap td { padding:.45rem .5rem; }
+      .badge { font-size:.65rem; padding:.15rem .45rem; }
     }
 
     /* Animations */
@@ -733,6 +851,7 @@
   <!-- Top bar -->
   <div class="admin-topbar">
     <div class="topbar-left">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()" aria-label="Toggle menu">☰</button>
       <div class="topbar-logo">🌱</div>
       <div>
         <div class="topbar-title">Micro-Greens Farm Ja</div>
@@ -747,8 +866,10 @@
   </div>
 
   <div class="admin-body">
+    <!-- Mobile sidebar backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleMobileSidebar()"></div>
     <!-- Sidebar -->
-    <aside class="admin-sidebar">
+    <aside class="admin-sidebar" id="adminSidebar">
       <div class="sidebar-section-label">Main</div>
       <button class="nav-item active" onclick="switchTab('dashboard')">
         <span class="nav-icon">📊</span><span>Dashboard</span>
@@ -2684,6 +2805,24 @@ function switchTab(tab) {
   const btns = document.querySelectorAll('.nav-item');
   btns.forEach(b => { if (b.getAttribute('onclick').includes(tab)) b.classList.add('active'); });
   refreshAll();
+  /* Auto-close mobile drawer after tab switch */
+  if (window.innerWidth <= 768) closeMobileSidebar();
+}
+
+function toggleMobileSidebar() {
+  const sb = document.getElementById('adminSidebar');
+  const bd = document.getElementById('sidebarBackdrop');
+  if (!sb || !bd) return;
+  const open = sb.classList.toggle('mobile-open');
+  bd.classList.toggle('visible', open);
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeMobileSidebar() {
+  const sb = document.getElementById('adminSidebar');
+  const bd = document.getElementById('sidebarBackdrop');
+  if (sb) sb.classList.remove('mobile-open');
+  if (bd) bd.classList.remove('visible');
+  document.body.style.overflow = '';
 }
 
 function updateSidebarBadges() {
