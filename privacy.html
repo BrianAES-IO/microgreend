@@ -6,7 +6,27 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-<title>Privacy Policy — Micro-Greens Farm Ja</title>
+<!-- Version-check cache-buster: auto-reloads on new deploy -->
+<script>
+(function(){
+  if (sessionStorage.getItem('_v_checked')) return;
+  sessionStorage.setItem('_v_checked','1');
+  fetch('/version.json?t='+Date.now(),{cache:'no-store'})
+    .then(function(r){return r.ok?r.json():null})
+    .then(function(d){
+      if(!d||!d.version)return;
+      var stored=localStorage.getItem('_site_v');
+      if(stored&&stored!==d.version){
+        localStorage.setItem('_site_v',d.version);
+        console.log('[cache-buster] New version detected ('+stored+' -> '+d.version+'), reloading...');
+        sessionStorage.removeItem('_v_checked');
+        window.location.reload(true);
+      } else {
+        localStorage.setItem('_site_v',d.version);
+      }
+    }).catch(function(){});
+})();
+</script><title>Privacy Policy — Micro-Greens Farm Ja</title>
   <meta name="description" content="Privacy Policy for Micro-Greens Farm Ja. Learn how we collect, use, and protect your personal data in compliance with the Jamaica Data Protection Act.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.microgreensfarmja.farm/privacy.html">
