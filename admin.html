@@ -10,6 +10,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
   <script src="js/firebase-sync.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -3897,13 +3898,34 @@ function livePreviewImg(slotId) {
   }
 }
 
-function handleImgUpload(slotId, input) {
+async function handleImgUpload(slotId, input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) {
-    showToast('Image too large (max 2 MB). Paste a URL instead for large images.', 'error');
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Image too large (max 5 MB). Compress it or paste a URL.', 'error');
     return;
   }
+  const label = IMAGE_SLOTS.find(s=>s.id===slotId)?.label || slotId;
+  /* Prefer Firebase Storage so the file syncs across devices */
+  if (window.MGFJ_Sync && window.MGFJ_Sync.storageReady()) {
+    showToast(`Uploading "${label}"… 0%`);
+    try {
+      const url = await window.MGFJ_Sync.uploadImage(file, slotId, function(p) {
+        showToast(`Uploading "${label}"… ${p}%`);
+      });
+      const imgs = getSiteImages();
+      imgs[slotId] = url;
+      saveSiteImages(imgs);
+      renderImagesForm();
+      showToast(`✅ "${label}" uploaded & synced!`, 'success');
+    } catch (e) {
+      console.error('Storage upload failed', e);
+      showToast('Cloud upload failed: ' + (e.message || e.code || 'unknown'), 'error');
+    }
+    input.value = '';
+    return;
+  }
+  /* Fallback: store as base64 in localStorage only (won't sync) */
   const reader = new FileReader();
   reader.onload = e => {
     const dataUrl = e.target.result;
@@ -3911,7 +3933,7 @@ function handleImgUpload(slotId, input) {
     imgs[slotId] = dataUrl;
     saveSiteImages(imgs);
     renderImagesForm();
-    showToast(`Image uploaded for "${IMAGE_SLOTS.find(s=>s.id===slotId)?.label || slotId}"!`, 'success');
+    showToast(`Image saved locally for "${label}" (cloud Storage unavailable)`, 'success');
   };
   reader.readAsDataURL(file);
 }
@@ -4742,16 +4764,36 @@ function livePreviewProdImg(pid) {
   else { const p = getProducts().find(x=>x.id===pid); box.innerHTML = `<span style="font-size:2.5rem">${p?.emoji||'🌿'}</span>`; }
 }
 
-function handleProdImgUpload(pid, input) {
+async function handleProdImgUpload(pid, input) {
   const file = input.files[0]; if (!file) return;
-  if (file.size > 2*1024*1024) { showToast('Max 2 MB. Use a URL for large images.', 'error'); return; }
+  if (file.size > 5*1024*1024) { showToast('Image too large (max 5 MB).', 'error'); return; }
+  /* Prefer Storage so it syncs across devices */
+  if (window.MGFJ_Sync && window.MGFJ_Sync.storageReady()) {
+    showToast('Uploading… 0%');
+    try {
+      const url = await window.MGFJ_Sync.uploadImage(file, 'img_'+pid, function(p){ showToast('Uploading… '+p+'%'); });
+      const imgs = getSiteImages();
+      imgs['img_'+pid] = url;
+      saveSiteImages(imgs);
+      if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
+      if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
+      showToast(`✅ ${pid} image uploaded & synced!`, 'success');
+    } catch (e) {
+      console.error('Storage upload failed', e);
+      showToast('Cloud upload failed: ' + (e.message || e.code || 'unknown'), 'error');
+    }
+    input.value = '';
+    return;
+  }
+  /* Fallback: local-only base64 */
   const reader = new FileReader();
   reader.onload = e => {
     const imgs = getSiteImages();
     imgs['img_'+pid] = e.target.result;
     saveSiteImages(imgs);
-    renderProductImagesGrid();
-    showToast(`Image saved for ${pid}!`, 'success');
+    if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
+    if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
+    showToast(`Image saved locally for ${pid} (Storage offline)`, 'success');
   };
   reader.readAsDataURL(file);
 }

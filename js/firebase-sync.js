@@ -26,6 +26,10 @@ const firebaseConfig = {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     window._db = firebase.firestore();
     window._auth = firebase.auth();
+    /* Storage is optional — only loaded on admin.html */
+    if (typeof firebase.storage === 'function') {
+      try { window._storage = firebase.storage(); } catch (e) {}
+    }
     /* Enable offline persistence (queues writes while offline) */
     try {
       window._db.enablePersistence({ synchronizeTabs: true }).catch(function(){});
@@ -214,6 +218,35 @@ window.MGFJ_Sync = {
   /* ── ADMIN-ONLY STATE ── */
   saveAdminState(key, data)      { return this._saveState('admin_state', key, data); },
   subscribeAdminState(key, cb)   { return this._subscribeState('admin_state', key, cb); },
+
+  /* ══════════════════════════════════════════════════════
+     FIREBASE STORAGE — for image file uploads
+     (Firestore docs are limited to ~1MB so files have to
+     go to Storage and we just save the URL in Firestore.)
+     ══════════════════════════════════════════════════════ */
+  storageReady() { return !!window._storage; },
+
+  /* Upload a File/Blob to Firebase Storage and resolve to its public URL.
+     onProgress(0-100) is optional. */
+  uploadImage(file, slotId, onProgress) {
+    return new Promise(function(resolve, reject) {
+      if (!window._storage) { reject(new Error('Firebase Storage not initialised')); return; }
+      const safeName = (slotId || 'upload') + '_' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const ref = window._storage.ref('site_images/' + safeName);
+      const task = ref.put(file, { contentType: file.type });
+      task.on('state_changed',
+        function(snap) {
+          if (typeof onProgress === 'function') {
+            onProgress(Math.round(snap.bytesTransferred / snap.totalBytes * 100));
+          }
+        },
+        function(err) { reject(err); },
+        function() {
+          ref.getDownloadURL().then(resolve, reject);
+        }
+      );
+    });
+  },
 
   /* ── ONE-TIME MIGRATION FROM LOCALSTORAGE ── */
   /* Pushes everything currently in admin's localStorage up to Firestore.
