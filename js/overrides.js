@@ -216,23 +216,37 @@
         codes[idx].usedCount = (codes[idx].usedCount || 0) + 1;
         codes[idx].lastUsed  = new Date().toISOString();
         localStorage.setItem('mgfj_discounts', JSON.stringify(codes));
+        /* Sync back to Firestore so admin sees the usage update */
+        if (window.MGFJ_Sync && window.MGFJ_Sync.ready())
+          window.MGFJ_Sync.saveDiscounts(codes);
       }
     },
   };
 
   /* ── Affiliate tracking ───────────────────────────── */
-  (function trackAffiliate() {
-    const ref = new URLSearchParams(location.search).get('ref');
+  function recordAffiliateVisit() {
+    const ref = sessionStorage.getItem('mgfj_aff_ref');
     if (!ref) return;
-    sessionStorage.setItem('mgfj_aff_ref', ref.toUpperCase());
-    /* Record visit */
     const affs = ls('mgfj_affiliates', []);
     const idx  = affs.findIndex(a => a.code.toUpperCase() === ref.toUpperCase());
-    if (idx >= 0) {
-      affs[idx].visits = (affs[idx].visits || 0) + 1;
-      affs[idx].lastVisit = new Date().toISOString();
-      localStorage.setItem('mgfj_affiliates', JSON.stringify(affs));
-    }
+    if (idx < 0) return;
+    /* Only count one visit per session */
+    if (sessionStorage.getItem('mgfj_aff_counted') === ref) return;
+    affs[idx].visits = (affs[idx].visits || 0) + 1;
+    affs[idx].lastVisit = new Date().toISOString();
+    localStorage.setItem('mgfj_affiliates', JSON.stringify(affs));
+    sessionStorage.setItem('mgfj_aff_counted', ref);
+    /* Sync back so admin sees the visit */
+    if (window.MGFJ_Sync && window.MGFJ_Sync.ready())
+      window.MGFJ_Sync.saveAffiliates(affs);
+  }
+
+  (function trackAffiliate() {
+    const ref = new URLSearchParams(location.search).get('ref');
+    if (ref) sessionStorage.setItem('mgfj_aff_ref', ref.toUpperCase());
+    /* Try to record now; if affiliate list isn't loaded yet, try again after sync arrives */
+    recordAffiliateVisit();
+    setTimeout(recordAffiliateVisit, 1500);
   })();
 
   window.MGFJ_Affiliate = {
@@ -250,6 +264,9 @@
       affs[idx].orderLog = affs[idx].orderLog || [];
       affs[idx].orderLog.push({ orderId, total, comm, at: new Date().toISOString() });
       localStorage.setItem('mgfj_affiliates', JSON.stringify(affs));
+      /* Sync to Firestore so admin sees the order/commission */
+      if (window.MGFJ_Sync && window.MGFJ_Sync.ready())
+        window.MGFJ_Sync.saveAffiliates(affs);
     },
   };
 
