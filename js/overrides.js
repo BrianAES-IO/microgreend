@@ -294,47 +294,57 @@
       return;
     }
 
-    /* Images — refresh localStorage + re-apply on the page */
+    /* Helper: should we accept cloud data?
+       NO if it's empty AND we already have non-empty local data — that
+       means cloud has never been migrated; don't wipe what's local. */
+    function shouldApply(cloudData, localKey, isArray) {
+      if (cloudData == null) return false;
+      var cloudEmpty = isArray
+        ? !Array.isArray(cloudData) || cloudData.length === 0
+        : (typeof cloudData !== 'object' || Object.keys(cloudData).length === 0);
+      if (!cloudEmpty) return true;
+      /* Cloud is empty — only apply if local is also empty (so it stays empty) */
+      var local = null;
+      try { local = JSON.parse(localStorage.getItem(localKey) || (isArray ? '[]' : '{}')); } catch {}
+      var localEmpty = isArray ? !local || local.length === 0
+                               : !local || Object.keys(local).length === 0;
+      return localEmpty;
+    }
+
+    /* Images */
     window.MGFJ_Sync.subscribeImages(function(data) {
-      if (!data || typeof data !== 'object') return;
+      if (!shouldApply(data, 'mgfj_images', false)) return;
       try {
         localStorage.setItem('mgfj_images', JSON.stringify(data));
-        /* Merge defaults + cloud overrides into the in-memory copy */
         Object.keys(window.MGFJ.imageOverrides).forEach(function(k){ delete window.MGFJ.imageOverrides[k]; });
         Object.assign(window.MGFJ.imageOverrides, IMG_DEFAULTS, data);
-        /* Re-apply to the page */
         applyImageOverrides();
       } catch (e) { console.warn('[MGFJ] image sync apply failed', e); }
     });
 
-    /* Products — refresh localStorage + tell any live page to re-render */
+    /* Products */
     window.MGFJ_Sync.subscribeProducts(function(data) {
-      if (!Array.isArray(data)) return;
+      if (!shouldApply(data, 'mgfj_products', true)) return;
       try {
         localStorage.setItem('mgfj_products', JSON.stringify(data));
-        /* If on order page, ask it to re-render the product grid */
         if (typeof window.renderProducts === 'function')      window.renderProducts();
         if (typeof window.renderProductGrid === 'function')   window.renderProductGrid();
         if (typeof window.renderSummary === 'function')       window.renderSummary();
-        /* If on learn page, re-render the Our Varieties table */
         if (typeof window.renderVarieties === 'function')     window.renderVarieties();
-        /* If on homepage, re-render the 3-product preview */
         if (typeof window.renderHomeProducts === 'function')  window.renderHomeProducts();
       } catch (e) { console.warn('[MGFJ] product sync apply failed', e); }
     });
 
     /* Discounts */
     window.MGFJ_Sync.subscribeDiscounts(function(data) {
-      if (!Array.isArray(data)) return;
-      try { localStorage.setItem('mgfj_discounts', JSON.stringify(data)); }
-      catch (e) {}
+      if (!shouldApply(data, 'mgfj_discounts', true)) return;
+      try { localStorage.setItem('mgfj_discounts', JSON.stringify(data)); } catch (e) {}
     });
 
     /* Affiliates */
     window.MGFJ_Sync.subscribeAffiliates(function(data) {
-      if (!Array.isArray(data)) return;
-      try { localStorage.setItem('mgfj_affiliates', JSON.stringify(data)); }
-      catch (e) {}
+      if (!shouldApply(data, 'mgfj_affiliates', true)) return;
+      try { localStorage.setItem('mgfj_affiliates', JSON.stringify(data)); } catch (e) {}
     });
 
     console.log('[MGFJ overrides] Public sync started — listening for admin changes');

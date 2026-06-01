@@ -1,5 +1,5 @@
 {
-  "version": "20260601-3",
-  "released": "2026-06-01T22:30:00Z",
-  "notes": "Added service worker for network-first HTML"
+  "version": "20260601-4",
+  "released": "2026-06-01T23:00:00Z",
+  "notes": "Don't wipe local data when cloud is empty"
 }

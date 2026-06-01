@@ -2748,6 +2748,19 @@ function startCloudSync() {
   function syncStateInto(localKey, subscribeFn) {
     const unsub = subscribeFn(function(data) {
       if (data === null || data === undefined) return;
+      /* Don't wipe local data with empty cloud data — that means cloud
+         has never been migrated or was just cleared accidentally. */
+      const isArray = Array.isArray(data);
+      const cloudEmpty = isArray
+        ? data.length === 0
+        : (typeof data !== 'object' || Object.keys(data).length === 0);
+      if (cloudEmpty) {
+        let local = null;
+        try { local = JSON.parse(localStorage.getItem(localKey) || (isArray ? '[]' : '{}')); } catch {}
+        const localEmpty = isArray ? !local || local.length === 0
+                                   : !local || Object.keys(local).length === 0;
+        if (!localEmpty) return; /* preserve local data */
+      }
       try {
         localStorage.setItem(localKey, typeof data === 'string' ? data : JSON.stringify(data));
         if (typeof refreshAll === 'function' && _adminInitialised) refreshAll();
