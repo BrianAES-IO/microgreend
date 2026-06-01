@@ -460,7 +460,9 @@ document.getElementById('yr').textContent = new Date().getFullYear();
 
     el.innerHTML = picks.map(function(p) {
       var src = imgs['img_'+p.id] || FALLBACK_IMG[p.id] || 'images/microgreens-tray.jpg';
-      return '<div class="product-preview-card reveal">' +
+      /* No .reveal class — IntersectionObserver only watches elements
+         present at page load, so dynamically-added cards stay invisible. */
+      return '<div class="product-preview-card">' +
         '<div class="ppc-img-wrap">' +
           '<img src="' + escHtml(src) + '" alt="' + escHtml(p.name) + ' microgreens" data-img-slot="img_' + escHtml(p.id) + '">' +
         '</div>' +
@@ -471,6 +473,7 @@ document.getElementById('yr').textContent = new Date().getFullYear();
         '</div>' +
       '</div>';
     }).join('');
+    console.log('[home] Rendered', picks.length, 'product cards from', products.length, 'products');
   }
 
   /* Expose so overrides.js can re-render when products sync */
