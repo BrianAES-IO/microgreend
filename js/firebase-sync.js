@@ -227,21 +227,47 @@ window.MGFJ_Sync = {
   storageReady() { return !!window._storage; },
 
   /* Upload a File/Blob to Firebase Storage and resolve to its public URL.
-     onProgress(0-100) is optional. */
+     onProgress(0-100) is optional. Times out if no bytes transferred in 15 s. */
   uploadImage(file, slotId, onProgress) {
     return new Promise(function(resolve, reject) {
-      if (!window._storage) { reject(new Error('Firebase Storage not initialised')); return; }
+      if (!window._storage) { reject(new Error('Firebase Storage not initialised — enable it in your Firebase Console at console.firebase.google.com')); return; }
+      if (!firebase.auth().currentUser) { reject(new Error('Not signed in — refresh the page and log in again')); return; }
       const safeName = (slotId || 'upload') + '_' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      console.log('[MGFJ] Uploading to Storage:', 'site_images/' + safeName, file.size + ' bytes');
       const ref = window._storage.ref('site_images/' + safeName);
       const task = ref.put(file, { contentType: file.type });
+      let lastBytes = 0;
+      let stuckTicks = 0;
+      const stuckChecker = setInterval(function() {
+        if (lastBytes === 0) {
+          stuckTicks++;
+          if (stuckTicks >= 5) {  /* 5 seconds with no progress = stuck */
+            clearInterval(stuckChecker);
+            task.cancel();
+            reject(new Error('Upload stuck at 0% — likely cause: Firebase Storage is not enabled or security rules deny writes. Open Firebase Console → Storage to check.'));
+          }
+        }
+      }, 1000);
       task.on('state_changed',
         function(snap) {
+          lastBytes = snap.bytesTransferred;
           if (typeof onProgress === 'function') {
             onProgress(Math.round(snap.bytesTransferred / snap.totalBytes * 100));
           }
         },
-        function(err) { reject(err); },
+        function(err) {
+          clearInterval(stuckChecker);
+          console.error('[MGFJ] Storage upload error:', err.code, err.message);
+          /* Translate common error codes to actionable messages */
+          let msg = err.message || err.code || 'unknown error';
+          if (err.code === 'storage/unauthorized') msg = 'Storage rules block this upload. In Firebase Console → Storage → Rules, make sure authenticated writes are allowed for site_images/.';
+          else if (err.code === 'storage/canceled') msg = msg; /* keep our message */
+          else if (err.code === 'storage/unknown') msg = 'Unknown Storage error. Most likely Firebase Storage is not enabled — visit console.firebase.google.com → Storage → Get started.';
+          else if (err.code === 'storage/quota-exceeded') msg = 'Storage quota exceeded.';
+          reject(new Error(msg));
+        },
         function() {
+          clearInterval(stuckChecker);
           ref.getDownloadURL().then(resolve, reject);
         }
       );

@@ -737,6 +737,22 @@
     /* Auto-logout warning */
     .idle-warning{position:fixed;top:0;left:0;right:0;background:#fef3c7;color:#92400e;text-align:center;padding:.55rem 1rem;font-size:.85rem;font-weight:600;z-index:10000;border-bottom:2px solid #f59e0b;display:none}
 
+    /* Upload progress overlay */
+    .upload-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:11000;display:none;align-items:center;justify-content:center;padding:1rem}
+    .upload-overlay.visible{display:flex}
+    .upload-card{background:#fff;border-radius:16px;padding:1.75rem 2rem;width:100%;max-width:420px;box-shadow:0 12px 60px rgba(0,0,0,.4);text-align:center}
+    .upload-card h3{font-size:1.1rem;font-weight:700;color:var(--text-main);margin-bottom:.4rem}
+    .upload-card .upload-sub{font-size:.82rem;color:var(--text-sub);margin-bottom:1.25rem}
+    .upload-bar-wrap{height:14px;background:#e2e8f0;border-radius:7px;overflow:hidden;margin-bottom:.65rem}
+    .upload-bar-fill{height:100%;background:linear-gradient(90deg,#3aab5e,#22c55e);border-radius:7px;transition:width .25s ease;width:0%}
+    .upload-pct{font-size:1.5rem;font-weight:800;color:var(--accent-dark);margin-bottom:.25rem}
+    .upload-status{font-size:.78rem;color:var(--text-muted);min-height:1.2em}
+    .upload-error{background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5;padding:.75rem;border-radius:8px;font-size:.82rem;text-align:left;margin-top:1rem;display:none;word-break:break-word}
+    .upload-error.visible{display:block}
+    .upload-success{font-size:2rem;margin:.5rem 0}
+    .upload-close-btn{margin-top:1rem;padding:.6rem 1.5rem;background:var(--accent-dark);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;display:none}
+    .upload-close-btn.visible{display:inline-block}
+
     /* ── PRODUCTION SUMMARY / PROFIT ── */
     .prod-summary{background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border:2px solid #86efac;border-radius:var(--r-lg);padding:1.1rem 1.25rem;margin-bottom:1rem}
     .prod-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem}
@@ -819,6 +835,20 @@
 
 <!-- Idle warning banner -->
 <div class="idle-warning" id="idleWarning">⚠ Session will expire in <span id="idleCountdown">60</span> seconds due to inactivity…</div>
+
+<!-- Upload progress overlay -->
+<div class="upload-overlay" id="uploadOverlay">
+  <div class="upload-card">
+    <h3 id="uploadTitle">Uploading image…</h3>
+    <div class="upload-sub" id="uploadSub">Please don't close this tab.</div>
+    <div class="upload-pct" id="uploadPct">0%</div>
+    <div class="upload-bar-wrap"><div class="upload-bar-fill" id="uploadBarFill"></div></div>
+    <div class="upload-status" id="uploadStatus">Starting…</div>
+    <div class="upload-success" id="uploadSuccess" style="display:none">✅</div>
+    <div class="upload-error" id="uploadError"></div>
+    <button class="upload-close-btn" id="uploadCloseBtn" onclick="hideUploadProgress()">Close</button>
+  </div>
+</div>
 
 <!-- ── LOGIN ── -->
 <div id="loginScreen">
@@ -3403,6 +3433,45 @@ function formatTime(iso) {
 /* ════════════════════════════════════════════════
    TOAST HELPER
 ════════════════════════════════════════════════ */
+/* ── Upload progress overlay ── */
+function showUploadProgress(title, sub) {
+  document.getElementById('uploadTitle').textContent = title || 'Uploading…';
+  document.getElementById('uploadSub').textContent = sub || "Please don't close this tab.";
+  document.getElementById('uploadPct').textContent = '0%';
+  document.getElementById('uploadBarFill').style.width = '0%';
+  document.getElementById('uploadStatus').textContent = 'Starting…';
+  document.getElementById('uploadSuccess').style.display = 'none';
+  document.getElementById('uploadError').classList.remove('visible');
+  document.getElementById('uploadError').textContent = '';
+  document.getElementById('uploadCloseBtn').classList.remove('visible');
+  document.getElementById('uploadOverlay').classList.add('visible');
+}
+function updateUploadProgress(pct, statusText) {
+  pct = Math.max(0, Math.min(100, Math.round(pct)));
+  document.getElementById('uploadPct').textContent = pct + '%';
+  document.getElementById('uploadBarFill').style.width = pct + '%';
+  if (statusText) document.getElementById('uploadStatus').textContent = statusText;
+}
+function uploadProgressSuccess(msg) {
+  document.getElementById('uploadPct').textContent = '100%';
+  document.getElementById('uploadBarFill').style.width = '100%';
+  document.getElementById('uploadStatus').textContent = msg || 'Upload complete!';
+  document.getElementById('uploadSuccess').style.display = 'block';
+  document.getElementById('uploadCloseBtn').classList.add('visible');
+  /* Auto-close after 2s on success */
+  setTimeout(function(){ if (document.getElementById('uploadOverlay').classList.contains('visible')) hideUploadProgress(); }, 2000);
+}
+function uploadProgressError(msg) {
+  const errEl = document.getElementById('uploadError');
+  errEl.textContent = msg || 'Upload failed';
+  errEl.classList.add('visible');
+  document.getElementById('uploadStatus').textContent = 'Upload failed.';
+  document.getElementById('uploadCloseBtn').classList.add('visible');
+}
+function hideUploadProgress() {
+  document.getElementById('uploadOverlay').classList.remove('visible');
+}
+
 function showToast(msg, type='success') {
   const t = document.createElement('div');
   t.className = `admin-toast ${type}`;
@@ -3902,30 +3971,38 @@ async function handleImgUpload(slotId, input) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) {
-    showToast('Image too large (max 5 MB). Compress it or paste a URL.', 'error');
+    alert('Image too large (max 5 MB). Compress it or paste a URL.');
+    input.value = '';
     return;
   }
   const label = IMAGE_SLOTS.find(s=>s.id===slotId)?.label || slotId;
+  const sizeKB = Math.round(file.size / 1024);
+  console.log('[upload] handleImgUpload', { slotId, fileName: file.name, sizeKB, type: file.type, storageReady: window.MGFJ_Sync && window.MGFJ_Sync.storageReady() });
+
   /* Prefer Firebase Storage so the file syncs across devices */
   if (window.MGFJ_Sync && window.MGFJ_Sync.storageReady()) {
-    showToast(`Uploading "${label}"… 0%`);
+    showUploadProgress(`Uploading "${label}"…`, `${file.name} • ${sizeKB} KB`);
+    updateUploadProgress(0, 'Connecting to Firebase Storage…');
     try {
       const url = await window.MGFJ_Sync.uploadImage(file, slotId, function(p) {
-        showToast(`Uploading "${label}"… ${p}%`);
+        updateUploadProgress(p, p < 100 ? `Uploaded ${p}% of ${sizeKB} KB` : 'Finishing up…');
       });
       const imgs = getSiteImages();
       imgs[slotId] = url;
       saveSiteImages(imgs);
       renderImagesForm();
-      showToast(`✅ "${label}" uploaded & synced!`, 'success');
+      uploadProgressSuccess(`"${label}" uploaded & synced!`);
     } catch (e) {
-      console.error('Storage upload failed', e);
-      showToast('Cloud upload failed: ' + (e.message || e.code || 'unknown'), 'error');
+      console.error('[upload] Storage upload failed', e);
+      uploadProgressError('Cloud upload failed: ' + (e.message || e.code || 'unknown') +
+        '\n\nMake sure Firebase Storage is enabled in your Firebase Console and that the security rules allow writes.');
     }
     input.value = '';
     return;
   }
   /* Fallback: store as base64 in localStorage only (won't sync) */
+  showUploadProgress(`Saving "${label}" locally…`, `${file.name} • ${sizeKB} KB`);
+  updateUploadProgress(50, 'Encoding image…');
   const reader = new FileReader();
   reader.onload = e => {
     const dataUrl = e.target.result;
@@ -3933,8 +4010,9 @@ async function handleImgUpload(slotId, input) {
     imgs[slotId] = dataUrl;
     saveSiteImages(imgs);
     renderImagesForm();
-    showToast(`Image saved locally for "${label}" (cloud Storage unavailable)`, 'success');
+    uploadProgressSuccess(`Saved locally only. (Enable Firebase Storage to sync across devices.)`);
   };
+  reader.onerror = function() { uploadProgressError('Failed to read file.'); };
   reader.readAsDataURL(file);
 }
 
@@ -4766,26 +4844,35 @@ function livePreviewProdImg(pid) {
 
 async function handleProdImgUpload(pid, input) {
   const file = input.files[0]; if (!file) return;
-  if (file.size > 5*1024*1024) { showToast('Image too large (max 5 MB).', 'error'); return; }
+  if (file.size > 5*1024*1024) { alert('Image too large (max 5 MB).'); input.value = ''; return; }
+  const sizeKB = Math.round(file.size / 1024);
+  console.log('[upload] handleProdImgUpload', { pid, fileName: file.name, sizeKB, type: file.type, storageReady: window.MGFJ_Sync && window.MGFJ_Sync.storageReady() });
+
   /* Prefer Storage so it syncs across devices */
   if (window.MGFJ_Sync && window.MGFJ_Sync.storageReady()) {
-    showToast('Uploading… 0%');
+    showUploadProgress(`Uploading ${pid} image…`, `${file.name} • ${sizeKB} KB`);
+    updateUploadProgress(0, 'Connecting to Firebase Storage…');
     try {
-      const url = await window.MGFJ_Sync.uploadImage(file, 'img_'+pid, function(p){ showToast('Uploading… '+p+'%'); });
+      const url = await window.MGFJ_Sync.uploadImage(file, 'img_'+pid, function(p){
+        updateUploadProgress(p, p < 100 ? `Uploaded ${p}% of ${sizeKB} KB` : 'Finishing up…');
+      });
       const imgs = getSiteImages();
       imgs['img_'+pid] = url;
       saveSiteImages(imgs);
       if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
       if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
-      showToast(`✅ ${pid} image uploaded & synced!`, 'success');
+      uploadProgressSuccess(`${pid} image uploaded & synced!`);
     } catch (e) {
-      console.error('Storage upload failed', e);
-      showToast('Cloud upload failed: ' + (e.message || e.code || 'unknown'), 'error');
+      console.error('[upload] Storage upload failed', e);
+      uploadProgressError('Cloud upload failed: ' + (e.message || e.code || 'unknown') +
+        '\n\nMake sure Firebase Storage is enabled in your Firebase Console and that the security rules allow writes.');
     }
     input.value = '';
     return;
   }
   /* Fallback: local-only base64 */
+  showUploadProgress(`Saving ${pid} image locally…`, `${file.name} • ${sizeKB} KB`);
+  updateUploadProgress(50, 'Encoding image…');
   const reader = new FileReader();
   reader.onload = e => {
     const imgs = getSiteImages();
@@ -4793,8 +4880,9 @@ async function handleProdImgUpload(pid, input) {
     saveSiteImages(imgs);
     if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
     if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
-    showToast(`Image saved locally for ${pid} (Storage offline)`, 'success');
+    uploadProgressSuccess('Saved locally only. (Enable Firebase Storage to sync across devices.)');
   };
+  reader.onerror = function() { uploadProgressError('Failed to read file.'); };
   reader.readAsDataURL(file);
 }
 
