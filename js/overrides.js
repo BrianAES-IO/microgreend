@@ -314,6 +314,8 @@
         if (typeof window.renderProducts === 'function')      window.renderProducts();
         if (typeof window.renderProductGrid === 'function')   window.renderProductGrid();
         if (typeof window.renderSummary === 'function')       window.renderSummary();
+        /* If on learn page, re-render the Our Varieties table */
+        if (typeof window.renderVarieties === 'function')     window.renderVarieties();
       } catch (e) { console.warn('[MGFJ] product sync apply failed', e); }
     });
 

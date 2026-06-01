@@ -142,55 +142,14 @@
       <p class="lead">Each variety we grow has been selected for its nutritional profile, flavour, and suitability for Jamaica's climate and palate.</p>
     </div>
 
-    <div class="variety-table reveal">
+    <div class="variety-table reveal" id="varietyTable">
       <div class="variety-row variety-head">
         <span>Variety</span>
         <span>Flavour Profile</span>
         <span>Key Nutrients</span>
         <span>Best Used In</span>
       </div>
-      <div class="variety-row">
-        <strong>Sunflower</strong>
-        <span>Nutty, rich, satisfying</span>
-        <span>Vitamin E, Zinc, Protein</span>
-        <span>Salads, sandwiches, wraps</span>
-      </div>
-      <div class="variety-row">
-        <strong>Radish</strong>
-        <span>Peppery, bold, spicy</span>
-        <span>Vitamin C, Folate, Anthocyanins</span>
-        <span>Garnish, soups, fish dishes</span>
-      </div>
-      <div class="variety-row">
-        <strong>Pea Shoots</strong>
-        <span>Sweet, fresh, delicate</span>
-        <span>Vitamins A, C, Fibre</span>
-        <span>Stir-fries, soups, garnish</span>
-      </div>
-      <div class="variety-row">
-        <strong>Broccoli</strong>
-        <span>Mild, slightly earthy</span>
-        <span>Sulforaphane, Vitamin K</span>
-        <span>Smoothies, salads, bowls</span>
-      </div>
-      <div class="variety-row">
-        <strong>Basil</strong>
-        <span>Aromatic, sweet, herbal</span>
-        <span>Vitamin K, Iron, Calcium</span>
-        <span>Pasta, pizza, Jamaican dishes</span>
-      </div>
-      <div class="variety-row">
-        <strong>Amaranth</strong>
-        <span>Mild, slightly sweet</span>
-        <span>Protein, Lysine, Iron</span>
-        <span>Salads, rice dishes, stews</span>
-      </div>
-      <div class="variety-row">
-        <strong>Arugula</strong>
-        <span>Peppery, bitter, nutty finish</span>
-        <span>Vitamin K, Folate, Calcium</span>
-        <span>Salads, pasta, pizza</span>
-      </div>
+      <!-- Variety rows are rendered dynamically from synced products data -->
     </div>
   </div>
 </section>
@@ -377,5 +336,58 @@
 <script src="js/overrides.js"></script>
 <script src="js/cookie-consent.js" defer></script>
 <script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+
+<!-- Render the Our Varieties table from synced products data -->
+<script>
+(function() {
+  var DEFAULT_VARIETIES = [
+    { id:'sunflower',  name:'Sunflower',  flavour:'Nutty, rich, satisfying',       nutrients:'Vitamin E, Zinc, Protein',        bestIn:'Salads, sandwiches, wraps' },
+    { id:'radish',     name:'Radish',     flavour:'Peppery, bold, spicy',          nutrients:'Vitamin C, Folate, Anthocyanins', bestIn:'Garnish, soups, fish dishes' },
+    { id:'pea-shoots', name:'Pea Shoots', flavour:'Sweet, fresh, delicate',        nutrients:'Vitamins A, C, Fibre',            bestIn:'Stir-fries, soups, garnish' },
+    { id:'broccoli',   name:'Broccoli',   flavour:'Mild, slightly earthy',         nutrients:'Sulforaphane, Vitamin K',         bestIn:'Smoothies, salads, bowls' },
+    { id:'kale',       name:'Kale',       flavour:'Earthy, mildly bitter',         nutrients:'Vitamins K, A, C, Lutein',        bestIn:'Smoothies, salads, soups' },
+    { id:'basil',      name:'Basil',      flavour:'Aromatic, sweet, herbal',       nutrients:'Vitamin K, Iron, Calcium',        bestIn:'Pasta, pizza, Jamaican dishes' },
+    { id:'cilantro',   name:'Cilantro',   flavour:'Citrusy, bright, herbaceous',   nutrients:'Vitamin K, Antioxidants',         bestIn:'Salsas, curries, garnish' },
+    { id:'amaranth',   name:'Amaranth',   flavour:'Mild, slightly sweet',          nutrients:'Protein, Lysine, Iron',           bestIn:'Salads, rice dishes, stews' },
+    { id:'arugula',    name:'Arugula',    flavour:'Peppery, bitter, nutty finish', nutrients:'Vitamin K, Folate, Calcium',      bestIn:'Salads, pasta, pizza' },
+  ];
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+  function renderVarieties() {
+    var table = document.getElementById('varietyTable');
+    if (!table) return;
+    var products = [];
+    try {
+      var stored = JSON.parse(localStorage.getItem('mgfj_products') || '[]');
+      if (stored.length) products = stored;
+    } catch {}
+    if (!products.length) products = DEFAULT_VARIETIES;
+    var rows = products.filter(function(p) {
+      return p.showInVarieties !== false && (p.flavour || p.nutrients || p.bestIn);
+    });
+    if (!rows.length) rows = DEFAULT_VARIETIES;
+    var headHTML =
+      '<div class="variety-row variety-head">' +
+        '<span>Variety</span><span>Flavour Profile</span>' +
+        '<span>Key Nutrients</span><span>Best Used In</span>' +
+      '</div>';
+    var rowsHTML = rows.map(function(p) {
+      return '<div class="variety-row">' +
+        '<strong>' + escapeHtml(p.name) + '</strong>' +
+        '<span>' + escapeHtml(p.flavour || '—') + '</span>' +
+        '<span>' + escapeHtml(p.nutrients || '—') + '</span>' +
+        '<span>' + escapeHtml(p.bestIn || '—') + '</span>' +
+      '</div>';
+    }).join('');
+    table.innerHTML = headHTML + rowsHTML;
+  }
+  /* Expose so overrides.js can re-render after Firestore sync arrives */
+  window.renderVarieties = renderVarieties;
+  renderVarieties();
+})();
+</script>
 </body>
 </html>

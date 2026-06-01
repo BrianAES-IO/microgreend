@@ -2159,6 +2159,27 @@
         <label>Image URL</label>
         <input type="url" id="pmImgUrl" placeholder="https://…">
       </div>
+      <div style="margin:1rem 0 .5rem;padding-top:.85rem;border-top:1px solid var(--border)">
+        <div style="font-size:.78rem;font-weight:700;color:var(--text-sub);letter-spacing:.05em;text-transform:uppercase;margin-bottom:.6rem">Learn-page Variety Info</div>
+        <div class="mf-row">
+          <div class="mf-group">
+            <label>Flavour Profile</label>
+            <input type="text" id="pmFlavour" placeholder="e.g. Nutty, rich, satisfying">
+          </div>
+          <div class="mf-group">
+            <label>Key Nutrients</label>
+            <input type="text" id="pmNutrients" placeholder="e.g. Vitamin E, Zinc, Protein">
+          </div>
+        </div>
+        <div class="mf-group">
+          <label>Best Used In</label>
+          <input type="text" id="pmBestIn" placeholder="e.g. Salads, sandwiches, wraps">
+        </div>
+        <label class="mf-check" style="margin-top:.4rem">
+          <input type="checkbox" id="pmShowInVarieties" checked>
+          <span>Show in "Our Varieties" table on Learn page</span>
+        </label>
+      </div>
       <div style="display:flex;gap:.75rem;margin-top:.5rem">
         <button class="btn btn-primary" onclick="saveProduct()" style="flex:1;justify-content:center;border-radius:var(--r-md)">Save Product</button>
         <button class="btn btn-outline" onclick="closeProductModal()" style="border-radius:var(--r-md)">Cancel</button>
@@ -3484,13 +3505,15 @@ function showToast(msg, type='success') {
    ALL PRODUCTS — dynamic (editable from admin)
 ════════════════════════════════════════════════ */
 const DEFAULT_PRODUCTS = [
-  { id:'sunflower',  name:'Sunflower',  price:1200, emoji:'🌻', desc:'Crunchy, nutty flavour. Rich in vitamins E and B complex.',   sizes:['4oz','8oz','16oz'] },
-  { id:'radish',     name:'Radish',     price:1100, emoji:'🌿', desc:'Spicy, peppery kick. Excellent source of antioxidants.',      sizes:['4oz','8oz','16oz'] },
-  { id:'pea-shoots', name:'Pea Shoots', price:1100, emoji:'🫛', desc:'Sweet and tender. High in vitamins C and A.',                 sizes:['4oz','8oz','16oz'] },
-  { id:'broccoli',   name:'Broccoli',   price:1300, emoji:'🥦', desc:'Mild, nutty. Packed with sulforaphane.',                      sizes:['4oz','8oz','16oz'] },
-  { id:'basil',      name:'Basil',      price:1200, emoji:'🌱', desc:'Aromatic Italian basil. Perfect for salads and sauces.',      sizes:['4oz','8oz','16oz'] },
-  { id:'amaranth',   name:'Amaranth',   price:1200, emoji:'🌸', desc:'Mild, earthy. High in protein and iron.',                    sizes:['4oz','8oz','16oz'] },
-  { id:'arugula',    name:'Arugula',    price:1400, emoji:'🥬', desc:'Bold, peppery flavour. Rich in vitamin K and calcium.',       sizes:['4oz','8oz','16oz'] },
+  { id:'sunflower',  name:'Sunflower',  price:1200, emoji:'🌻', desc:'Crunchy, nutty flavour. Rich in vitamins E and B complex.',   sizes:['4oz','8oz','16oz'], flavour:'Nutty, rich, satisfying',         nutrients:'Vitamin E, Zinc, Protein',           bestIn:'Salads, sandwiches, wraps',          showInVarieties:true },
+  { id:'radish',     name:'Radish',     price:1100, emoji:'🌿', desc:'Spicy, peppery kick. Excellent source of antioxidants.',      sizes:['4oz','8oz','16oz'], flavour:'Peppery, bold, spicy',            nutrients:'Vitamin C, Folate, Anthocyanins',    bestIn:'Garnish, soups, fish dishes',        showInVarieties:true },
+  { id:'pea-shoots', name:'Pea Shoots', price:1100, emoji:'🫛', desc:'Sweet and tender. High in vitamins C and A.',                 sizes:['4oz','8oz','16oz'], flavour:'Sweet, fresh, delicate',          nutrients:'Vitamins A, C, Fibre',               bestIn:'Stir-fries, soups, garnish',         showInVarieties:true },
+  { id:'broccoli',   name:'Broccoli',   price:1300, emoji:'🥦', desc:'Mild, nutty. Packed with sulforaphane.',                      sizes:['4oz','8oz','16oz'], flavour:'Mild, slightly earthy',           nutrients:'Sulforaphane, Vitamin K',            bestIn:'Smoothies, salads, bowls',           showInVarieties:true },
+  { id:'kale',       name:'Kale',       price:1300, emoji:'🥬', desc:'Earthy and nutrient-dense. A nutritional powerhouse.',        sizes:['4oz','8oz','16oz'], flavour:'Earthy, mildly bitter',           nutrients:'Vitamins K, A, C, Lutein',           bestIn:'Smoothies, salads, soups',           showInVarieties:true },
+  { id:'basil',      name:'Basil',      price:1200, emoji:'🌱', desc:'Aromatic Italian basil. Perfect for salads and sauces.',      sizes:['4oz','8oz','16oz'], flavour:'Aromatic, sweet, herbal',         nutrients:'Vitamin K, Iron, Calcium',           bestIn:'Pasta, pizza, Jamaican dishes',      showInVarieties:true },
+  { id:'cilantro',   name:'Cilantro',   price:1500, emoji:'🌿', desc:'Vibrant, citrusy. Essential for fresh salsas and curries.',   sizes:['4oz','8oz','16oz'], flavour:'Citrusy, bright, herbaceous',     nutrients:'Vitamin K, Antioxidants',            bestIn:'Salsas, curries, garnish',           showInVarieties:true },
+  { id:'amaranth',   name:'Amaranth',   price:1200, emoji:'🌸', desc:'Mild, earthy. High in protein and iron.',                     sizes:['4oz','8oz','16oz'], flavour:'Mild, slightly sweet',            nutrients:'Protein, Lysine, Iron',              bestIn:'Salads, rice dishes, stews',         showInVarieties:true },
+  { id:'arugula',    name:'Arugula',    price:1400, emoji:'🥬', desc:'Bold, peppery flavour. Rich in vitamin K and calcium.',       sizes:['4oz','8oz','16oz'], flavour:'Peppery, bitter, nutty finish',   nutrients:'Vitamin K, Folate, Calcium',         bestIn:'Salads, pasta, pizza',               showInVarieties:true },
 ];
 function getProducts() {
   try { const s = JSON.parse(localStorage.getItem('mgfj_products')||'[]'); return s.length ? s : [...DEFAULT_PRODUCTS]; }
@@ -4925,6 +4948,10 @@ function openProductModal(id=null) {
   document.getElementById('pmPrice').value   = p?.price || '';
   document.getElementById('pmSizes').value   = (p?.sizes||['4oz','8oz','16oz']).join(', ');
   document.getElementById('pmImgUrl').value  = p ? (getSiteImages()['img_'+p.id]||'') : '';
+  document.getElementById('pmFlavour').value     = p?.flavour || '';
+  document.getElementById('pmNutrients').value   = p?.nutrients || '';
+  document.getElementById('pmBestIn').value      = p?.bestIn || '';
+  document.getElementById('pmShowInVarieties').checked = p ? (p.showInVarieties !== false) : true;
   document.getElementById('productModal').classList.add('open');
 }
 function closeProductModal() { document.getElementById('productModal').classList.remove('open'); }
@@ -4948,6 +4975,11 @@ function saveProduct() {
     desc:  document.getElementById('pmDesc').value.trim(),
     price,
     sizes: document.getElementById('pmSizes').value.split(',').map(s=>s.trim()).filter(Boolean),
+    /* Learn-page variety fields */
+    flavour:   document.getElementById('pmFlavour').value.trim(),
+    nutrients: document.getElementById('pmNutrients').value.trim(),
+    bestIn:    document.getElementById('pmBestIn').value.trim(),
+    showInVarieties: document.getElementById('pmShowInVarieties').checked,
   };
 
   /* Save image URL if provided */
