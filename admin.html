@@ -737,6 +737,19 @@
     /* Auto-logout warning */
     .idle-warning{position:fixed;top:0;left:0;right:0;background:#fef3c7;color:#92400e;text-align:center;padding:.55rem 1rem;font-size:.85rem;font-weight:600;z-index:10000;border-bottom:2px solid #f59e0b;display:none}
 
+    /* Image library picker */
+    .library-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:11000;display:none;align-items:center;justify-content:center;padding:1rem}
+    .library-modal.open{display:flex}
+    .library-card{background:#fff;border-radius:16px;width:100%;max-width:840px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 60px rgba(0,0,0,.4)}
+    .library-head{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .library-head h3{font-size:1.05rem;font-weight:700;margin:0}
+    .library-head small{font-size:.78rem;color:var(--text-muted);display:block;margin-top:.15rem}
+    .lib-grid{padding:1.25rem;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.85rem;flex:1}
+    .lib-tile{cursor:pointer;border:2px solid var(--border);border-radius:10px;overflow:hidden;transition:all .15s;background:#f9fafb}
+    .lib-tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(58,171,94,.2)}
+    .lib-tile img{width:100%;height:100px;object-fit:cover;display:block}
+    .lib-label{font-size:.72rem;padding:.4rem .55rem;color:var(--text-sub);text-align:center;background:#fff;font-weight:500}
+
     /* Upload progress overlay */
     .upload-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:11000;display:none;align-items:center;justify-content:center;padding:1rem}
     .upload-overlay.visible{display:flex}
@@ -835,6 +848,20 @@
 
 <!-- Idle warning banner -->
 <div class="idle-warning" id="idleWarning">⚠ Session will expire in <span id="idleCountdown">60</span> seconds due to inactivity…</div>
+
+<!-- Image library picker -->
+<div class="library-modal" id="libraryModal">
+  <div class="library-card">
+    <div class="library-head">
+      <div>
+        <h3>🖼️ Choose from Library</h3>
+        <small>Click any image to use it for this slot. Synced across all devices.</small>
+      </div>
+      <button class="modal-close" onclick="closeImageLibrary()" style="font-size:1.4rem">✕</button>
+    </div>
+    <div class="lib-grid" id="libraryGrid"></div>
+  </div>
+</div>
 
 <!-- Upload progress overlay -->
 <div class="upload-overlay" id="uploadOverlay">
@@ -1156,9 +1183,16 @@
 
         <!-- Images sub-pane -->
         <div class="sub-pane" id="sub-images">
-          <p style="font-size:.84rem;color:var(--text-sub);margin-bottom:1.25rem">Paste new image URLs to update hero photos on each page. Changes take effect immediately after saving.</p>
+          <div style="padding:1rem 1.15rem;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:var(--r-md);margin-bottom:1.25rem">
+            <strong style="font-size:.88rem;color:#1e40af;display:block;margin-bottom:.4rem">🖼️ Three ways to set an image (all save across all devices)</strong>
+            <ol style="margin:.3rem 0 0 1.2rem;font-size:.82rem;color:#1e3a8a;line-height:1.7">
+              <li><strong>📚 Library</strong> — pick from the bundled stock images (fastest, recommended)</li>
+              <li><strong>Paste URL</strong> — any hosted image (Imgur, Google Drive shared link, etc.), then click <em>Save URL</em></li>
+              <li><strong>📁 Upload (local)</strong> — file picker — only saves on this device, doesn't sync. Use only for testing.</li>
+            </ol>
+          </div>
           <div id="imagesForm"></div>
-          <button class="btn btn-primary" onclick="saveImages()" style="margin-top:.5rem">Save Image URLs</button>
+          <button class="btn btn-primary" onclick="saveImages()" style="margin-top:.5rem">Save All Image URLs</button>
         </div>
 
         <!-- Crops / Homepage Lineup sub-pane -->
@@ -3936,6 +3970,60 @@ function saveSiteImages(imgs) {
   if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveImages(imgs);
 }
 
+/* Library: images bundled with the site at /images/.
+   Add new files to that folder + this list to make them pickable. */
+const LIBRARY_IMAGES = [
+  { file:'sunflower.jpg',        label:'Sunflower microgreen' },
+  { file:'radish.png',           label:'Radish microgreen' },
+  { file:'pea-shoots.png',       label:'Pea shoots' },
+  { file:'broccoli.png',         label:'Broccoli microgreen' },
+  { file:'kale.png',             label:'Kale microgreen' },
+  { file:'basil.png',            label:'Basil microgreen' },
+  { file:'cilantro.jpg',         label:'Cilantro microgreen' },
+  { file:'amaranth.jpg',         label:'Amaranth microgreen' },
+  { file:'arugula.jpg',          label:'Arugula microgreen' },
+  { file:'microgreens-tray.jpg', label:'Microgreens tray' },
+  { file:'farm-hands.jpg',       label:'Hands tending plants' },
+  { file:'greens-closeup.jpg',   label:'Greens close-up' },
+  { file:'gemini-1.png',         label:'Hero photo (gemini 1)' },
+  { file:'gemini-2.png',         label:'Hero photo (gemini 2)' },
+  { file:'gemini-3.png',         label:'Hero photo (gemini 3)' },
+  { file:'gemini-4.png',         label:'Hero photo (gemini 4)' },
+];
+
+let _libraryTargetSlot = null;
+function openImageLibrary(slotId) {
+  _libraryTargetSlot = slotId;
+  document.getElementById('libraryModal').classList.add('open');
+  const grid = document.getElementById('libraryGrid');
+  grid.innerHTML = LIBRARY_IMAGES.map(function(img) {
+    const url = 'images/' + img.file;
+    return '<div class="lib-tile" onclick="pickFromLibrary(\'' + url + '\')">' +
+      '<img src="' + url + '" loading="lazy" onerror="this.parentElement.style.opacity=0.3">' +
+      '<div class="lib-label">' + img.label + '</div>' +
+    '</div>';
+  }).join('');
+}
+function closeImageLibrary() {
+  document.getElementById('libraryModal').classList.remove('open');
+  _libraryTargetSlot = null;
+}
+function pickFromLibrary(url) {
+  if (!_libraryTargetSlot) return;
+  const slot = _libraryTargetSlot;
+  const imgs = getSiteImages();
+  if (slot.startsWith('img_') || /^[a-z]+_/.test(slot)) {
+    /* It's a site/variety/product image slot */
+    imgs[slot] = url;
+    saveSiteImages(imgs);
+    if (typeof renderImagesForm === 'function') renderImagesForm();
+    if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
+    if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
+    showToast('✅ Image set from library', 'success');
+  }
+  closeImageLibrary();
+}
+
 function renderImagesForm() {
   const imgs = getSiteImages();
   const cats = [...new Set(IMAGE_SLOTS.map(s => s.cat))];
@@ -3962,11 +4050,12 @@ function renderImagesForm() {
               ${slot.note ? `<div class="img-slot-v2-note">ℹ️ ${slot.note}</div>` : ''}
               <div class="img-url-row">
                 <input type="url" id="imgurl-${slot.id}" value="${current.startsWith('data:') ? '' : current}" placeholder="${slot.default || 'Paste image URL here…'}" oninput="livePreviewImg('${slot.id}')">
-                <label class="upload-file-lbl" title="Upload from device">
-                  📁 Upload
+                <button class="btn btn-sm" style="background:#6b46c1;color:#fff" onclick="openImageLibrary('${slot.id}')" title="Pick from bundled images">📚 Library</button>
+                <button class="btn btn-sm btn-green" onclick="saveImageSlot('${slot.id}')">Save URL</button>
+                <label class="upload-file-lbl" title="Upload from device (local-only — won't sync across devices)" style="opacity:.7">
+                  📁 Upload (local)
                   <input type="file" class="upload-file-input" accept="image/*" onchange="handleImgUpload('${slot.id}',this)">
                 </label>
-                <button class="btn btn-sm btn-green" onclick="saveImageSlot('${slot.id}')">Save</button>
                 ${current ? `<button class="btn btn-sm btn-danger" onclick="removeImageSlot('${slot.id}')" title="Reset to default">✕</button>` : ''}
               </div>
               ${isFile ? `<p style="font-size:.7rem;color:var(--accent-dark);margin-top:.3rem">✅ Custom file uploaded</p>` : ''}
@@ -4843,11 +4932,12 @@ function renderProductImagesGrid() {
             <div class="img-slot-v2-page">📄 order.html — product card</div>
             <div class="img-url-row">
               <input type="url" id="prodimgurl-${p.id}" value="${current.startsWith('data:') ? '' : current}" placeholder="Paste image URL…" oninput="livePreviewProdImg('${p.id}')">
-              <label class="upload-file-lbl">
-                📁 Upload
+              <button class="btn btn-sm" style="background:#6b46c1;color:#fff" onclick="openImageLibrary('img_${p.id}')" title="Pick from bundled images">📚 Library</button>
+              <button class="btn btn-sm btn-green" onclick="saveProdImgSlot('${p.id}')">Save URL</button>
+              <label class="upload-file-lbl" title="Local-only upload — won't sync across devices" style="opacity:.7">
+                📁 Upload (local)
                 <input type="file" class="upload-file-input" accept="image/*" onchange="handleProdImgUpload('${p.id}',this)">
               </label>
-              <button class="btn btn-sm btn-green" onclick="saveProdImgSlot('${p.id}')">Save</button>
               ${current ? `<button class="btn btn-sm btn-danger" onclick="removeProdImg('${p.id}')">✕</button>` : ''}
             </div>
             ${current.startsWith('data:') ? `<p style="font-size:.7rem;color:var(--accent-dark);margin-top:.3rem">✅ Custom file uploaded</p>` : ''}
