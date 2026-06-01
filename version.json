@@ -1,5 +1,5 @@
 {
-  "version": "20260601-2",
-  "released": "2026-06-01T22:00:00Z",
-  "notes": "Added version-check cache-buster"
+  "version": "20260601-3",
+  "released": "2026-06-01T22:30:00Z",
+  "notes": "Added service worker for network-first HTML"
 }

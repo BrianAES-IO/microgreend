@@ -6,9 +6,16 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-<!-- Version-check cache-buster: auto-reloads on new deploy -->
+<!-- Cache control: service worker + version check -->
 <script>
 (function(){
+  /* Register service worker for network-first HTML caching */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function(e){
+      console.warn('[sw] register failed', e);
+    });
+  }
+  /* Version check — force reload if newer version published */
   if (sessionStorage.getItem('_v_checked')) return;
   sessionStorage.setItem('_v_checked','1');
   fetch('/version.json?t='+Date.now(),{cache:'no-store'})
@@ -18,7 +25,7 @@
       var stored=localStorage.getItem('_site_v');
       if(stored&&stored!==d.version){
         localStorage.setItem('_site_v',d.version);
-        console.log('[cache-buster] New version detected ('+stored+' -> '+d.version+'), reloading...');
+        console.log('[cache-buster] '+stored+' -> '+d.version+', reloading');
         sessionStorage.removeItem('_v_checked');
         window.location.reload(true);
       } else {
