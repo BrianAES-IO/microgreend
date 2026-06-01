@@ -31,9 +31,11 @@
     learn_hero:    'images/gemini-3.png',
     contact_hero:  'images/farm-hands.jpg',
     /* Home sections */
-    index_about:   'images/greens-closeup.jpg',
-    index_cta:     'images/microgreens-tray.jpg',
-    index_process: 'images/farm-hands.jpg',
+    index_about:        'images/greens-closeup.jpg',
+    index_cta:          'images/microgreens-tray.jpg',
+    index_process:      'images/microgreens-tray.jpg',
+    index_process_back: 'images/greens-closeup.jpg',
+    index_delivery:     'images/farm-hands.jpg',
     /* Products */
     img_sunflower: 'images/sunflower.jpg',
     img_radish:    'images/radish.png',
@@ -316,6 +318,8 @@
         if (typeof window.renderSummary === 'function')       window.renderSummary();
         /* If on learn page, re-render the Our Varieties table */
         if (typeof window.renderVarieties === 'function')     window.renderVarieties();
+        /* If on homepage, re-render the 3-product preview */
+        if (typeof window.renderHomeProducts === 'function')  window.renderHomeProducts();
       } catch (e) { console.warn('[MGFJ] product sync apply failed', e); }
     });
 

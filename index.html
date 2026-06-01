@@ -206,42 +206,7 @@
       <p class="lead">Each variety is selected for its unique flavour profile, nutritional density, and culinary versatility. All priced in Jamaican dollars.</p>
     </div>
 
-    <div class="grid-3 products-preview">
-
-      <div class="product-preview-card reveal">
-        <div class="ppc-img-wrap">
-          <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBbhZT70rnxD7MRYxJbUj8bhlVyeHV_m6FeBrGMjBGCefnlJGN1jKOX1KJj5VQxKi3O7z3wbvJoQ6gR-1aJKHFtO5HN9pzD0mFH6EI8gJSwO8JuZ3L2dP4l5nAm7i5TNFYFjl_Jls=w1280" alt="Sunflower microgreens">
-        </div>
-        <div class="ppc-body">
-          <h4 class="h4">Sunflower</h4>
-          <p>Rich, nutty flavour with satisfying crunch. A customer favourite and perfect for salads.</p>
-          <span class="ppc-price">J$1,200 / 8oz</span>
-        </div>
-      </div>
-
-      <div class="product-preview-card reveal">
-        <div class="ppc-img-wrap">
-          <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBKflGNW85laLyPjQKHDqlHEWgX3XVtf3v4JqAGJXvYYJF3miqVjpK4YJDv8aL4vNGmFT7Rk5ZpkNxT5b13yI4ZxzMEpW7Jdadb0i5Jby-j_jVnCqFqOBJqbB5dkGmOSgUbJzHpk=w1280" alt="Radish microgreens">
-        </div>
-        <div class="ppc-body">
-          <h4 class="h4">Radish</h4>
-          <p>Bold, peppery kick that elevates any dish. High in antioxidants and vitamins C and E.</p>
-          <span class="ppc-price">J$1,100 / 8oz</span>
-        </div>
-      </div>
-
-      <div class="product-preview-card reveal">
-        <div class="ppc-img-wrap">
-          <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUBZApdlU70p4gbqzPZ4SKjEpFLz-GOEaqveMaouJWrmJVFgGCYrknCbbFQGGtHnGhD5k-dFHPJQxWn-6ICEjVPkLO4EzqLO2Z4O5IB3BKbhERMJtT_T7b6E4ZaJhEJMMxwQLSsshh4=w1280" alt="Pea shoot microgreens">
-        </div>
-        <div class="ppc-body">
-          <h4 class="h4">Pea Shoots</h4>
-          <p>Sweet, delicate, and loaded with vitamins. Perfect garnish for soups and stir-fries.</p>
-          <span class="ppc-price">J$1,100 / 8oz</span>
-        </div>
-      </div>
-
-    </div>
+    <div class="grid-3 products-preview" id="homeProductsPreview"></div>
 
     <div class="text-center" style="margin-top:3rem">
       <a href="order.html" class="btn-gold btn-lg">View Full Menu &amp; Order</a>
@@ -268,8 +233,8 @@
     </div>
     <div class="reveal-left" style="order:1">
       <div class="multi-img-stack">
-        <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUCHPyii9eQLVPEiRG0YMwQ1Piq9pEjc2JcJiOAKj7QVJID1kSwQBH6tHKMFEPp_vfDl0fcbfzBv_aBj2k6LIb43VcX2eFuiEblvXunZXr4F2OsHhv9fxLSuVnJyNfmxhLMbFSdvr4=w1280" alt="Growing microgreens" class="stack-img stack-img-back">
-        <img src="https://lh3.googleusercontent.com/sitesv/AA5AbUCs61GuOdlaJuI6bNAU7vxL2U3FRYzXMuB5X-IZHDvpM0jkM2KIJlFX6dkMi0mIxHx8Mz6wVpBlmH_e8mAJcgm9ZJJLFJmRKnBNQ0vC3wJOqxRPfj-RnPeRqR9hHbZ0zy4cXrMxE=w1280" alt="Microgreens trays" class="stack-img stack-img-front" data-img-slot="index_process">
+        <img src="images/greens-closeup.jpg" alt="Growing microgreens" class="stack-img stack-img-back" data-img-slot="index_process_back">
+        <img src="images/microgreens-tray.jpg" alt="Microgreens trays" class="stack-img stack-img-front" data-img-slot="index_process">
       </div>
     </div>
   </div>
@@ -350,9 +315,9 @@
     </div>
     <div class="reveal-right">
       <img
-        src="https://lh3.googleusercontent.com/sitesv/AA5AbUAziVpLgw_Mk2EyiQbF2ygVPQpXnz8hDIr85WNVruF1JAfRGO5jJq3xbpHg19q1gT-WwHZiMJi2P0G_Bg3jqFbLCfWgkP4M8oZT4-V9VpH16W0XGBMBhLDhHvMUB5Ib5qQm72j7E=w1280"
+        src="images/farm-hands.jpg"
         alt="Microgreens delivery"
-        class="img-rounded" style="width:100%;height:480px;object-fit:cover">
+        class="img-rounded" style="width:100%;height:480px;object-fit:cover" data-img-slot="index_delivery">
     </div>
   </div>
 </section>
@@ -457,6 +422,60 @@ document.getElementById('yr').textContent = new Date().getFullYear();
       sessionStorage.setItem('ann_dismissed', '1');
     });
   }
+})();
+</script>
+
+<!-- Render Our Varieties preview from synced products data -->
+<script>
+(function() {
+  /* Seed with the same defaults the admin uses so the section shows
+     real content before the Firestore sync arrives. */
+  var DEFAULTS = [
+    { id:'sunflower',  name:'Sunflower',  price:1200, desc:'Rich, nutty flavour with satisfying crunch. A customer favourite and perfect for salads.' },
+    { id:'radish',     name:'Radish',     price:1100, desc:'Bold, peppery kick that elevates any dish. High in antioxidants and vitamins C and E.' },
+    { id:'pea-shoots', name:'Pea Shoots', price:1100, desc:'Sweet, delicate, and loaded with vitamins. Perfect garnish for soups and stir-fries.' },
+  ];
+  var FALLBACK_IMG = {
+    sunflower:'images/sunflower.jpg', radish:'images/radish.png', 'pea-shoots':'images/pea-shoots.png',
+    broccoli:'images/broccoli.png', kale:'images/kale.png', basil:'images/basil.png',
+    cilantro:'images/cilantro.jpg', amaranth:'images/amaranth.jpg', arugula:'images/arugula.jpg'
+  };
+  function escHtml(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function fmtPrice(n){ return 'J$' + Number(n||0).toLocaleString() + ' / 8oz'; }
+
+  function renderHomeProducts() {
+    var el = document.getElementById('homeProductsPreview');
+    if (!el) return;
+    var products = [];
+    try {
+      var stored = JSON.parse(localStorage.getItem('mgfj_products') || '[]');
+      if (stored.length) products = stored;
+    } catch {}
+    if (!products.length) products = DEFAULTS;
+
+    /* Only featured products + first 3 */
+    var imgs = {};
+    try { imgs = JSON.parse(localStorage.getItem('mgfj_images') || '{}'); } catch {}
+    var picks = products.slice(0, 3);
+
+    el.innerHTML = picks.map(function(p) {
+      var src = imgs['img_'+p.id] || FALLBACK_IMG[p.id] || 'images/microgreens-tray.jpg';
+      return '<div class="product-preview-card reveal">' +
+        '<div class="ppc-img-wrap">' +
+          '<img src="' + escHtml(src) + '" alt="' + escHtml(p.name) + ' microgreens" data-img-slot="img_' + escHtml(p.id) + '">' +
+        '</div>' +
+        '<div class="ppc-body">' +
+          '<h4 class="h4">' + escHtml(p.name) + '</h4>' +
+          '<p>' + escHtml(p.desc || '') + '</p>' +
+          '<span class="ppc-price">' + escHtml(fmtPrice(p.price)) + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* Expose so overrides.js can re-render when products sync */
+  window.renderHomeProducts = renderHomeProducts;
+  renderHomeProducts();
 })();
 </script>
 </body>
