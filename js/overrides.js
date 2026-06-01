@@ -22,7 +22,51 @@
     el.onerror = null; // prevent infinite onerror loop
   }
 
-  const imgs = ls('mgfj_images', {});
+  /* Default images for every slot — used if admin hasn't set a custom one */
+  const IMG_DEFAULTS = {
+    /* Heroes */
+    index_hero:    'images/gemini-4.png',
+    order_hero:    'images/gemini-1.png',
+    about_hero:    'images/gemini-2.png',
+    learn_hero:    'images/gemini-3.png',
+    contact_hero:  'images/farm-hands.jpg',
+    /* Home sections */
+    index_about:   'images/greens-closeup.jpg',
+    index_cta:     'images/microgreens-tray.jpg',
+    index_process: 'images/farm-hands.jpg',
+    /* Products */
+    img_sunflower: 'images/sunflower.jpg',
+    img_radish:    'images/radish.png',
+    'img_pea-shoots': 'images/pea-shoots.png',
+    img_broccoli:  'images/broccoli.png',
+    img_kale:      'images/kale.png',
+    img_basil:     'images/basil.png',
+    img_cilantro:  'images/cilantro.jpg',
+    img_amaranth:  'images/amaranth.jpg',
+    img_arugula:   'images/arugula.jpg',
+    /* About */
+    about_story:    'images/farm-hands.jpg',
+    about_gallery1: 'images/microgreens-tray.jpg',
+    about_gallery2: 'images/greens-closeup.jpg',
+    about_gallery3: 'images/gemini-2.png',
+    /* Learn */
+    learn_section1: 'images/greens-closeup.jpg',
+    learn_section2: 'images/microgreens-tray.jpg',
+    /* Varieties */
+    variety_sun:  'images/sunflower.jpg',
+    variety_rad:  'images/radish.png',
+    variety_pea:  'images/pea-shoots.png',
+    variety_broc: 'images/broccoli.png',
+    variety_kale: 'images/kale.png',
+    variety_bas:  'images/basil.png',
+    variety_cil:  'images/cilantro.jpg',
+    variety_ama:  'images/amaranth.jpg',
+    variety_aru:  'images/arugula.jpg'
+  };
+
+  /* Merge: stored overrides win, defaults fill the gaps */
+  const stored = ls('mgfj_images', {});
+  const imgs = Object.assign({}, IMG_DEFAULTS, stored);
   const page = location.pathname.split('/').pop() || 'index.html';
 
   /* ── apply image overrides ───────────────────────── */
@@ -236,9 +280,9 @@
       if (!data || typeof data !== 'object') return;
       try {
         localStorage.setItem('mgfj_images', JSON.stringify(data));
-        /* Update the in-memory copy used by helpers */
+        /* Merge defaults + cloud overrides into the in-memory copy */
         Object.keys(window.MGFJ.imageOverrides).forEach(function(k){ delete window.MGFJ.imageOverrides[k]; });
-        Object.assign(window.MGFJ.imageOverrides, data);
+        Object.assign(window.MGFJ.imageOverrides, IMG_DEFAULTS, data);
         /* Re-apply to the page */
         applyImageOverrides();
       } catch (e) { console.warn('[MGFJ] image sync apply failed', e); }

@@ -3799,41 +3799,47 @@ const IMAGE_SLOTS = [
   // Brand
   { id:'site_logo',      label:'Site Logo (Navbar)',        page:'All Pages',          cat:'Brand',    note:'Replaces the leaf icon in the navigation bar' },
   // Heroes
-  { id:'index_hero',     label:'Homepage Hero',             page:'index.html',         cat:'Heroes' },
-  { id:'order_hero',     label:'Order Page Hero',           page:'order.html',         cat:'Heroes' },
-  { id:'about_hero',     label:'About Us Hero',             page:'about.html',         cat:'Heroes' },
-  { id:'learn_hero',     label:'Learn More Hero',           page:'learn.html',         cat:'Heroes' },
-  { id:'contact_hero',   label:'Contact Page Hero',         page:'contact.html',       cat:'Heroes' },
+  { id:'index_hero',     label:'Homepage Hero',             page:'index.html',         cat:'Heroes',   default:'images/gemini-4.png' },
+  { id:'order_hero',     label:'Order Page Hero',           page:'order.html',         cat:'Heroes',   default:'images/gemini-1.png' },
+  { id:'about_hero',     label:'About Us Hero',             page:'about.html',         cat:'Heroes',   default:'images/gemini-2.png' },
+  { id:'learn_hero',     label:'Learn More Hero',           page:'learn.html',         cat:'Heroes',   default:'images/gemini-3.png' },
+  { id:'contact_hero',   label:'Contact Page Hero',         page:'contact.html',       cat:'Heroes',   default:'images/farm-hands.jpg' },
   // Homepage Sections
-  { id:'index_about',    label:'Homepage Story / About',    page:'index.html',         cat:'Home',     note:'Image beside the "Our Story" / founder text block' },
-  { id:'index_cta',      label:'Homepage CTA Background',   page:'index.html',         cat:'Home',     note:'Background behind the green call-to-action banner' },
-  { id:'index_process',  label:'Our Process Section',       page:'index.html',         cat:'Home',     note:'Photo in the "how we grow" / process section' },
+  { id:'index_about',    label:'Homepage Story / About',    page:'index.html',         cat:'Home',     note:'Image beside the "Our Story" / founder text block', default:'images/greens-closeup.jpg' },
+  { id:'index_cta',      label:'Homepage CTA Background',   page:'index.html',         cat:'Home',     note:'Background behind the green call-to-action banner', default:'images/microgreens-tray.jpg' },
+  { id:'index_process',  label:'Our Process Section',       page:'index.html',         cat:'Home',     note:'Photo in the "how we grow" / process section',     default:'images/farm-hands.jpg' },
   // Product Images
-  { id:'img_sunflower',  label:'Sunflower',                 page:'order.html',         cat:'Products' },
-  { id:'img_radish',     label:'Radish',                    page:'order.html',         cat:'Products' },
-  { id:'img_pea-shoots', label:'Pea Shoots',                page:'order.html',         cat:'Products' },
-  { id:'img_broccoli',   label:'Broccoli',                  page:'order.html',         cat:'Products' },
-  { id:'img_basil',      label:'Basil',                     page:'order.html',         cat:'Products' },
-  { id:'img_amaranth',   label:'Amaranth',                  page:'order.html',         cat:'Products' },
-  { id:'img_arugula',    label:'Arugula',                   page:'order.html',         cat:'Products' },
+  { id:'img_sunflower',  label:'Sunflower',                 page:'order.html',         cat:'Products', default:'images/sunflower.jpg' },
+  { id:'img_radish',     label:'Radish',                    page:'order.html',         cat:'Products', default:'images/radish.png' },
+  { id:'img_pea-shoots', label:'Pea Shoots',                page:'order.html',         cat:'Products', default:'images/pea-shoots.png' },
+  { id:'img_broccoli',   label:'Broccoli',                  page:'order.html',         cat:'Products', default:'images/broccoli.png' },
+  { id:'img_kale',       label:'Kale',                      page:'order.html',         cat:'Products', default:'images/kale.png' },
+  { id:'img_basil',      label:'Basil',                     page:'order.html',         cat:'Products', default:'images/basil.png' },
+  { id:'img_cilantro',   label:'Cilantro',                  page:'order.html',         cat:'Products', default:'images/cilantro.jpg' },
+  { id:'img_amaranth',   label:'Amaranth',                  page:'order.html',         cat:'Products', default:'images/amaranth.jpg' },
+  { id:'img_arugula',    label:'Arugula',                   page:'order.html',         cat:'Products', default:'images/arugula.jpg' },
   // About Page
-  { id:'about_story',    label:'About — Story / Founder',   page:'about.html',         cat:'About',    note:'Main image in the founder/story section' },
-  { id:'about_gallery1', label:'About Gallery Photo 1',     page:'about.html',         cat:'About' },
-  { id:'about_gallery2', label:'About Gallery Photo 2',     page:'about.html',         cat:'About' },
-  { id:'about_gallery3', label:'About Gallery Photo 3',     page:'about.html',         cat:'About' },
+  { id:'about_story',    label:'About — Story / Founder',   page:'about.html',         cat:'About',    note:'Main image in the founder/story section', default:'images/farm-hands.jpg' },
+  { id:'about_gallery1', label:'About Gallery Photo 1',     page:'about.html',         cat:'About',    default:'images/microgreens-tray.jpg' },
+  { id:'about_gallery2', label:'About Gallery Photo 2',     page:'about.html',         cat:'About',    default:'images/greens-closeup.jpg' },
+  { id:'about_gallery3', label:'About Gallery Photo 3',     page:'about.html',         cat:'About',    default:'images/gemini-2.png' },
   // Learn / Varieties
-  { id:'learn_section1', label:'Learn Page Section 1',      page:'learn.html',         cat:'Learn' },
-  { id:'learn_section2', label:'Learn Page Section 2',      page:'learn.html',         cat:'Learn' },
-  { id:'variety_sun',    label:'Variety: Sunflower',        page:'learn.html',         cat:'Varieties' },
-  { id:'variety_rad',    label:'Variety: Radish',           page:'learn.html',         cat:'Varieties' },
-  { id:'variety_pea',    label:'Variety: Pea Shoots',       page:'learn.html',         cat:'Varieties' },
-  { id:'variety_broc',   label:'Variety: Broccoli',         page:'learn.html',         cat:'Varieties' },
-  { id:'variety_bas',    label:'Variety: Basil',            page:'learn.html',         cat:'Varieties' },
+  { id:'learn_section1', label:'Learn Page Section 1',      page:'learn.html',         cat:'Learn',    default:'images/greens-closeup.jpg' },
+  { id:'learn_section2', label:'Learn Page Section 2',      page:'learn.html',         cat:'Learn',    default:'images/microgreens-tray.jpg' },
+  { id:'variety_sun',    label:'Variety: Sunflower',        page:'learn.html',         cat:'Varieties',default:'images/sunflower.jpg' },
+  { id:'variety_rad',    label:'Variety: Radish',           page:'learn.html',         cat:'Varieties',default:'images/radish.png' },
+  { id:'variety_pea',    label:'Variety: Pea Shoots',       page:'learn.html',         cat:'Varieties',default:'images/pea-shoots.png' },
+  { id:'variety_broc',   label:'Variety: Broccoli',         page:'learn.html',         cat:'Varieties',default:'images/broccoli.png' },
+  { id:'variety_kale',   label:'Variety: Kale',             page:'learn.html',         cat:'Varieties',default:'images/kale.png' },
+  { id:'variety_bas',    label:'Variety: Basil',            page:'learn.html',         cat:'Varieties',default:'images/basil.png' },
+  { id:'variety_cil',    label:'Variety: Cilantro',         page:'learn.html',         cat:'Varieties',default:'images/cilantro.jpg' },
+  { id:'variety_ama',    label:'Variety: Amaranth',         page:'learn.html',         cat:'Varieties',default:'images/amaranth.jpg' },
+  { id:'variety_aru',    label:'Variety: Arugula',          page:'learn.html',         cat:'Varieties',default:'images/arugula.jpg' },
 ];
 
 function getSiteImages() { return JSON.parse(localStorage.getItem('mgfj_images') || '{}'); }
 function saveSiteImages(imgs) {
-  saveSiteImages(imgs);
+  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
   if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveImages(imgs);
 }
 
@@ -3846,27 +3852,29 @@ function renderImagesForm() {
     html += `<div class="img-cat-title">📁 ${cat}</div>`;
     IMAGE_SLOTS.filter(s => s.cat === cat).forEach(slot => {
       const current = imgs[slot.id] || '';
+      const display = current || slot.default || '';
       const isFile  = current.startsWith('data:');
+      const usingDefault = !current && !!slot.default;
       html += `
         <div class="img-slot-v2" id="imgslot-${slot.id}">
           <div class="img-slot-v2-inner">
             <div class="img-preview-box" id="imgpreview-${slot.id}">
-              ${current
-                ? `<img src="${current}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='🖼️'">`
+              ${display
+                ? `<img src="${display}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='🖼️'">`
                 : '🖼️'}
             </div>
             <div class="img-slot-v2-body">
-              <div class="img-slot-v2-label">${slot.label}</div>
+              <div class="img-slot-v2-label">${slot.label}${usingDefault ? ' <span style="font-size:.65rem;color:var(--text-muted);font-weight:400">(using default)</span>' : ''}</div>
               <div class="img-slot-v2-page">📄 ${slot.page}</div>
               ${slot.note ? `<div class="img-slot-v2-note">ℹ️ ${slot.note}</div>` : ''}
               <div class="img-url-row">
-                <input type="url" id="imgurl-${slot.id}" value="${current.startsWith('data:') ? '' : current}" placeholder="Paste image URL here…" oninput="livePreviewImg('${slot.id}')">
+                <input type="url" id="imgurl-${slot.id}" value="${current.startsWith('data:') ? '' : current}" placeholder="${slot.default || 'Paste image URL here…'}" oninput="livePreviewImg('${slot.id}')">
                 <label class="upload-file-lbl" title="Upload from device">
                   📁 Upload
                   <input type="file" class="upload-file-input" accept="image/*" onchange="handleImgUpload('${slot.id}',this)">
                 </label>
                 <button class="btn btn-sm btn-green" onclick="saveImageSlot('${slot.id}')">Save</button>
-                ${current ? `<button class="btn btn-sm btn-danger" onclick="removeImageSlot('${slot.id}')">✕</button>` : ''}
+                ${current ? `<button class="btn btn-sm btn-danger" onclick="removeImageSlot('${slot.id}')" title="Reset to default">✕</button>` : ''}
               </div>
               ${isFile ? `<p style="font-size:.7rem;color:var(--accent-dark);margin-top:.3rem">✅ Custom file uploaded</p>` : ''}
             </div>
