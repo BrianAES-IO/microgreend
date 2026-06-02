@@ -24,9 +24,13 @@ const firebaseConfig = {
   }
   try {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    /* Firestore is required for sync */
     window._db = firebase.firestore();
-    window._auth = firebase.auth();
-    /* Storage is optional — only loaded on admin.html */
+    /* Auth is optional — public pages don't load the auth SDK */
+    if (typeof firebase.auth === 'function') {
+      try { window._auth = firebase.auth(); } catch (e) { console.warn('[MGFJ] Auth init skipped', e.message); }
+    }
+    /* Storage is optional — only on admin */
     if (typeof firebase.storage === 'function') {
       try { window._storage = firebase.storage(); } catch (e) {}
     }
@@ -35,7 +39,8 @@ const firebaseConfig = {
       window._db.enablePersistence({ synchronizeTabs: true }).catch(function(){});
     } catch (e) {}
     window._mgfj_firebase_ready = true;
-    console.log('[MGFJ] Firebase initialised: project =', firebaseConfig.projectId);
+    console.log('[MGFJ] Firebase initialised: project =', firebaseConfig.projectId,
+      '| auth:', !!window._auth, '| storage:', !!window._storage);
   } catch (e) {
     console.error('[MGFJ] Firebase init failed', e);
     window._mgfj_firebase_ready = false;
