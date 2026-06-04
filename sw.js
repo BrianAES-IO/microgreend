@@ -2,7 +2,7 @@
    Once registered on a browser, ensures every visit gets fresh HTML
    from the network. Falls back to cache only when offline. */
 
-const CACHE_NAME = 'mgfj-v3';
+const CACHE_NAME = 'mgfj-v4';
 
 self.addEventListener('install', event => {
   /* Take over immediately — don't wait for next reload */
@@ -44,8 +44,24 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  /* Everything else (JS, CSS, images): stale-while-revalidate.
-     Serve cache instantly if available, fetch fresh in background. */
+  /* JS & CSS: network-first so code changes always arrive immediately.
+     Falls back to cache only when offline. */
+  const isCode = /\.(js|css)(\?|$)/i.test(url.pathname + url.search) ||
+                 /\.(js|css)$/i.test(url.pathname);
+  if (isCode) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .then(resp => {
+          const copy = resp.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, copy));
+          return resp;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  /* Images & other assets: stale-while-revalidate (fast + self-updating). */
   event.respondWith(
     caches.match(event.request).then(cached => {
       const fetchPromise = fetch(event.request).then(resp => {
