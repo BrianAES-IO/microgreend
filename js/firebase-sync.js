@@ -225,6 +225,81 @@ window.MGFJ_Sync = {
   subscribeAdminState(key, cb)   { return this._subscribeState('admin_state', key, cb); },
 
   /* ══════════════════════════════════════════════════════
+     PER-SLOT IMAGE DOCS  (no Firebase Storage required)
+     ────────────────────────────────────────────────────
+     Each image slot is its own doc in `site_images`, holding
+     either a URL or a compressed base64 string. One image per
+     doc keeps every doc well under Firestore's 1MB limit, so
+     uploads work on the free (Spark) plan, sync across
+     devices, and survive cache clears.
+     ══════════════════════════════════════════════════════ */
+  async saveImageDoc(slotId, value) {
+    if (!this.ready()) return false;
+    try {
+      await window._db.collection('site_images').doc(slotId).set({
+        v: value,
+        _updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return true;
+    } catch (e) { console.error('[MGFJ] saveImageDoc ' + slotId + ' failed', e); return false; }
+  },
+  async deleteImageDoc(slotId) {
+    if (!this.ready()) return false;
+    try { await window._db.collection('site_images').doc(slotId).delete(); return true; }
+    catch (e) { console.error('[MGFJ] deleteImageDoc failed', e); return false; }
+  },
+  /* Subscribe to the whole collection — returns a {slotId: value} map */
+  subscribeImageDocs(onChange) {
+    if (!this.ready()) { onChange({}); return function(){}; }
+    return window._db.collection('site_images').onSnapshot(function(snap) {
+      const map = {};
+      snap.forEach(function(doc){ const d = doc.data(); if (d && d.v) map[doc.id] = d.v; });
+      onChange(map);
+    }, function(err){ console.warn('[MGFJ] image docs listener:', err.message); });
+  },
+
+  /* Client-side image compressor — resizes + re-encodes so the
+     base64 result fits comfortably in a Firestore doc.
+     Returns a Promise<dataURL>. */
+  compressImage(file, maxDim, quality) {
+    maxDim = maxDim || 1100;
+    quality = quality || 0.82;
+    return new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onerror = function(){ reject(new Error('Could not read file')); };
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onerror = function(){ reject(new Error('Could not decode image')); };
+        img.onload = function() {
+          let w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else        { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          /* PNG with transparency (e.g. logos) -> keep PNG, else JPEG */
+          const isPng = /png$/i.test(file.type);
+          let out = canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', quality);
+          /* If still too big (>~900KB), step quality down for JPEG */
+          if (out.length > 900000 && !isPng) {
+            out = canvas.toDataURL('image/jpeg', 0.6);
+          }
+          if (out.length > 950000) {
+            reject(new Error('Image is too large even after compression. Try a smaller image.'));
+            return;
+          }
+          resolve(out);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /* ══════════════════════════════════════════════════════
      FIREBASE STORAGE — for image file uploads
      (Firestore docs are limited to ~1MB so files have to
      go to Storage and we just save the URL in Firestore.)
@@ -339,7 +414,6 @@ window.MGFJ_Sync = {
     /* Public state docs */
     const publicMap = [
       { key:'mgfj_products',  fn:'saveProducts',   label:'products'   },
-      { key:'mgfj_images',    fn:'saveImages',     label:'images'     },
       { key:'mgfj_discounts', fn:'saveDiscounts',  label:'discounts'  },
       { key:'mgfj_affiliates',fn:'saveAffiliates', label:'affiliates' }
     ];
@@ -350,6 +424,16 @@ window.MGFJ_Sync = {
         try { await window.MGFJ_Sync[p.fn](val); results[p.label] = Array.isArray(val) ? val.length : 1; }
         catch (e) { results.errors.push(p.label + ': ' + e.message); }
       }
+    }
+
+    /* Images — push each slot as its own doc (avoids 1MB blob limit) */
+    progressCb('Migrating images…');
+    const imgMap = (function(){ try { return JSON.parse(localStorage.getItem('mgfj_images')||'{}'); } catch { return {}; } })();
+    results.images = 0;
+    for (const slotId of Object.keys(imgMap)) {
+      if (!imgMap[slotId]) continue;
+      try { await window.MGFJ_Sync.saveImageDoc(slotId, imgMap[slotId]); results.images++; }
+      catch (e) { results.errors.push('image ' + slotId + ': ' + e.message); }
     }
 
     /* Admin-only state docs */

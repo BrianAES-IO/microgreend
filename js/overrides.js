@@ -311,15 +311,32 @@
       return localEmpty;
     }
 
-    /* Images */
-    window.MGFJ_Sync.subscribeImages(function(data) {
-      if (!shouldApply(data, 'mgfj_images', false)) return;
+    /* Images — per-doc collection (each slot its own Firestore doc) */
+    window.MGFJ_Sync.subscribeImageDocs(function(map) {
+      if (!map || typeof map !== 'object') return;
       try {
-        localStorage.setItem('mgfj_images', JSON.stringify(data));
+        var local = {};
+        try { local = JSON.parse(localStorage.getItem('mgfj_images') || '{}'); } catch {}
+        var merged = Object.assign({}, local, map);
+        localStorage.setItem('mgfj_images', JSON.stringify(merged));
         Object.keys(window.MGFJ.imageOverrides).forEach(function(k){ delete window.MGFJ.imageOverrides[k]; });
-        Object.assign(window.MGFJ.imageOverrides, IMG_DEFAULTS, data);
+        Object.assign(window.MGFJ.imageOverrides, IMG_DEFAULTS, merged);
         applyImageOverrides();
-      } catch (e) { console.warn('[MGFJ] image sync apply failed', e); }
+        if (typeof window.renderHomeProducts === 'function') window.renderHomeProducts();
+      } catch (e) { console.warn('[MGFJ] image docs sync failed', e); }
+    });
+    /* Legacy: also read the old single images blob if it still exists */
+    window.MGFJ_Sync.subscribeImages(function(data) {
+      if (!data || typeof data !== 'object' || !Object.keys(data).length) return;
+      try {
+        var local = {};
+        try { local = JSON.parse(localStorage.getItem('mgfj_images') || '{}'); } catch {}
+        /* per-doc values win; only fill gaps from the legacy blob */
+        var merged = Object.assign({}, data, local);
+        localStorage.setItem('mgfj_images', JSON.stringify(merged));
+        Object.assign(window.MGFJ.imageOverrides, IMG_DEFAULTS, merged);
+        applyImageOverrides();
+      } catch (e) {}
     });
 
     /* Products */

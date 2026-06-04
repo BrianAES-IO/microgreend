@@ -1,5 +1,5 @@
 {
-  "version": "20260601-5",
-  "released": "2026-06-01T23:30:00Z",
-  "notes": "Fix Firebase init crashing on public pages (auth SDK optional)"
+  "version": "20260604-1",
+  "released": "2026-06-04T16:00:00Z",
+  "notes": "Per-doc image storage (no Storage needed), library upload, chart fix"
 }

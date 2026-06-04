@@ -774,6 +774,12 @@
     .library-head{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
     .library-head h3{font-size:1.05rem;font-weight:700;margin:0}
     .library-head small{font-size:.78rem;color:var(--text-muted);display:block;margin-top:.15rem}
+    .library-close-btn{width:36px;height:36px;border-radius:50%;border:none;background:#f0f4f1;color:#1a2e1f;font-size:1.1rem;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s}
+    .library-close-btn:hover{background:#e53e3e;color:#fff}
+    .lib-tile.lib-upload-tile{border:2px dashed var(--accent);background:var(--accent-light);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:140px;gap:.4rem;color:var(--accent-dark)}
+    .lib-tile.lib-upload-tile:hover{background:#d3f0dd}
+    .lib-tile.lib-upload-tile .lib-upload-icon{font-size:1.8rem}
+    .lib-tile.lib-upload-tile .lib-upload-text{font-size:.8rem;font-weight:700;text-align:center;padding:0 .5rem}
     .lib-grid{padding:1.25rem;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.85rem;flex:1}
     .lib-tile{cursor:pointer;border:2px solid var(--border);border-radius:10px;overflow:hidden;transition:all .15s;background:#f9fafb}
     .lib-tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 16px rgba(58,171,94,.2)}
@@ -885,13 +891,14 @@
     <div class="library-head">
       <div>
         <h3>🖼️ Choose from Library</h3>
-        <small>Click any image to use it for this slot. Synced across all devices.</small>
+        <small>Click an image, or upload your own. Synced across all devices.</small>
       </div>
-      <button class="modal-close" onclick="closeImageLibrary()" style="font-size:1.4rem">✕</button>
+      <button class="library-close-btn" onclick="closeImageLibrary()" aria-label="Close">✕</button>
     </div>
     <div class="lib-grid" id="libraryGrid"></div>
   </div>
 </div>
+<input type="file" id="libraryUploadInput" accept="image/*" style="display:none" onchange="handleLibraryUpload(this)">
 
 <!-- Upload progress overlay -->
 <div class="upload-overlay" id="uploadOverlay">
@@ -2770,9 +2777,20 @@ function startCloudSync() {
   }
   /* Public state (also lets admin see live changes from other admin devices) */
   syncStateInto('mgfj_products',   window.MGFJ_Sync.subscribeProducts.bind(window.MGFJ_Sync));
-  syncStateInto('mgfj_images',     window.MGFJ_Sync.subscribeImages.bind(window.MGFJ_Sync));
   syncStateInto('mgfj_discounts',  window.MGFJ_Sync.subscribeDiscounts.bind(window.MGFJ_Sync));
   syncStateInto('mgfj_affiliates', window.MGFJ_Sync.subscribeAffiliates.bind(window.MGFJ_Sync));
+
+  /* Images: per-doc collection merged into the mgfj_images map */
+  _stateUnsubs.push(window.MGFJ_Sync.subscribeImageDocs(function(map) {
+    if (!map || typeof map !== 'object') return;
+    const local = (function(){ try { return JSON.parse(localStorage.getItem('mgfj_images')||'{}'); } catch { return {}; } })();
+    /* Merge cloud images over local; cloud is source of truth for keys it has */
+    const merged = Object.assign({}, local, map);
+    localStorage.setItem('mgfj_images', JSON.stringify(merged));
+    if (typeof renderImagesForm === 'function' && currentTab === 'manage') renderImagesForm();
+    if (typeof renderProductImagesGrid === 'function' && currentTab === 'products') renderProductImagesGrid();
+    if (typeof renderProductManageGrid === 'function' && currentTab === 'products') renderProductManageGrid();
+  }));
 
   /* Admin-only state */
   const adminKeys = [
@@ -4020,9 +4038,10 @@ const IMAGE_SLOTS = [
 ];
 
 function getSiteImages() { return JSON.parse(localStorage.getItem('mgfj_images') || '{}'); }
+/* localStorage only. Per-slot Firestore sync is handled by applyImageToSlot /
+   removeImageFromSlot (one doc per image) to avoid Firestore's 1MB doc limit. */
 function saveSiteImages(imgs) {
   localStorage.setItem('mgfj_images', JSON.stringify(imgs));
-  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveImages(imgs);
 }
 
 /* Library: images bundled with the site at /images/.
@@ -4044,6 +4063,12 @@ const LIBRARY_IMAGES = [
   { file:'gemini-2.png',         label:'Hero photo (gemini 2)' },
   { file:'gemini-3.png',         label:'Hero photo (gemini 3)' },
   { file:'gemini-4.png',         label:'Hero photo (gemini 4)' },
+  { file:'logo-greens.png',      label:'🌱 Logo (greens PNG)' },
+  { file:'logo.svg',             label:'🌱 Logo (SVG)' },
+  { file:'farm-1.jpg',           label:'Farm photo 1' },
+  { file:'farm-2.jpg',           label:'Farm photo 2' },
+  { file:'farm-3.jpg',           label:'Farm photo 3' },
+  { file:'greens-macro.png',     label:'Greens macro' },
 ];
 
 let _libraryTargetSlot = null;
@@ -4051,13 +4076,19 @@ function openImageLibrary(slotId) {
   _libraryTargetSlot = slotId;
   document.getElementById('libraryModal').classList.add('open');
   const grid = document.getElementById('libraryGrid');
-  grid.innerHTML = LIBRARY_IMAGES.map(function(img) {
+  /* First tile = upload from device */
+  let html = '<div class="lib-tile lib-upload-tile" onclick="triggerLibraryUpload()">' +
+      '<div class="lib-upload-icon">📤</div>' +
+      '<div class="lib-upload-text">Upload from device</div>' +
+    '</div>';
+  html += LIBRARY_IMAGES.map(function(img) {
     const url = 'images/' + img.file;
     return '<div class="lib-tile" onclick="pickFromLibrary(\'' + url + '\')">' +
       '<img src="' + url + '" loading="lazy" onerror="this.parentElement.style.opacity=0.3">' +
       '<div class="lib-label">' + img.label + '</div>' +
     '</div>';
   }).join('');
+  grid.innerHTML = html;
 }
 function closeImageLibrary() {
   document.getElementById('libraryModal').classList.remove('open');
@@ -4065,18 +4096,71 @@ function closeImageLibrary() {
 }
 function pickFromLibrary(url) {
   if (!_libraryTargetSlot) return;
-  const slot = _libraryTargetSlot;
-  const imgs = getSiteImages();
-  if (slot.startsWith('img_') || /^[a-z]+_/.test(slot)) {
-    /* It's a site/variety/product image slot */
-    imgs[slot] = url;
-    saveSiteImages(imgs);
-    if (typeof renderImagesForm === 'function') renderImagesForm();
-    if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
-    if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
-    showToast('✅ Image set from library', 'success');
-  }
+  applyImageToSlot(_libraryTargetSlot, url);
+  showToast('✅ Image set from library', 'success');
   closeImageLibrary();
+}
+function triggerLibraryUpload() {
+  document.getElementById('libraryUploadInput').click();
+}
+async function handleLibraryUpload(input) {
+  const file = input.files[0];
+  if (!file || !_libraryTargetSlot) return;
+  const slot = _libraryTargetSlot;
+  if (file.size > 5 * 1024 * 1024) { alert('Image too large (max 5 MB). Choose a smaller file.'); input.value=''; return; }
+  await uploadAndApplyImage(file, slot);
+  input.value = '';
+  closeImageLibrary();
+}
+
+/* Shared: compress -> store per-doc in Firestore -> cache locally -> re-render */
+async function uploadAndApplyImage(file, slot) {
+  const sizeKB = Math.round(file.size / 1024);
+  showUploadProgress('Processing image…', file.name + ' • ' + sizeKB + ' KB');
+  updateUploadProgress(20, 'Compressing…');
+  try {
+    let dataUrl;
+    if (window.MGFJ_Sync && typeof window.MGFJ_Sync.compressImage === 'function') {
+      dataUrl = await window.MGFJ_Sync.compressImage(file, 1100, 0.82);
+    } else {
+      /* fallback: raw base64 */
+      dataUrl = await new Promise(function(res, rej){
+        const r = new FileReader(); r.onload = e=>res(e.target.result); r.onerror = rej; r.readAsDataURL(file);
+      });
+    }
+    updateUploadProgress(60, 'Saving to cloud…');
+    await applyImageToSlot(slot, dataUrl);
+    uploadProgressSuccess('Image uploaded & synced across devices!');
+  } catch (e) {
+    console.error('[upload] failed', e);
+    uploadProgressError(e.message || 'Upload failed');
+  }
+}
+
+/* Assign an image (URL or base64) to a slot: localStorage + per-doc Firestore */
+async function applyImageToSlot(slot, value) {
+  const imgs = getSiteImages();
+  imgs[slot] = value;
+  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+    await window.MGFJ_Sync.saveImageDoc(slot, value);
+  }
+  if (typeof renderImagesForm === 'function') renderImagesForm();
+  if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
+  if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
+}
+
+/* Remove an image from a slot: localStorage + per-doc Firestore */
+async function removeImageFromSlot(slot) {
+  const imgs = getSiteImages();
+  delete imgs[slot];
+  localStorage.setItem('mgfj_images', JSON.stringify(imgs));
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+    await window.MGFJ_Sync.deleteImageDoc(slot);
+  }
+  if (typeof renderImagesForm === 'function') renderImagesForm();
+  if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
+  if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
 }
 
 function renderImagesForm() {
@@ -4138,85 +4222,41 @@ async function handleImgUpload(slotId, input) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > 5 * 1024 * 1024) {
-    alert('Image too large (max 5 MB). Compress it or paste a URL.');
+    alert('Image too large (max 5 MB). Choose a smaller file.');
     input.value = '';
     return;
   }
-  const label = IMAGE_SLOTS.find(s=>s.id===slotId)?.label || slotId;
-  const sizeKB = Math.round(file.size / 1024);
-  console.log('[upload] handleImgUpload', { slotId, fileName: file.name, sizeKB, type: file.type, storageReady: window.MGFJ_Sync && window.MGFJ_Sync.storageReady() });
-
-  /* Prefer Firebase Storage so the file syncs across devices */
-  if (window.MGFJ_Sync && window.MGFJ_Sync.storageReady()) {
-    showUploadProgress(`Uploading "${label}"…`, `${file.name} • ${sizeKB} KB`);
-    updateUploadProgress(0, 'Connecting to Firebase Storage…');
-    try {
-      const url = await window.MGFJ_Sync.uploadImage(file, slotId, function(p) {
-        updateUploadProgress(p, p < 100 ? `Uploaded ${p}% of ${sizeKB} KB` : 'Finishing up…');
-      });
-      const imgs = getSiteImages();
-      imgs[slotId] = url;
-      saveSiteImages(imgs);
-      renderImagesForm();
-      uploadProgressSuccess(`"${label}" uploaded & synced!`);
-    } catch (e) {
-      console.error('[upload] Storage upload failed', e);
-      uploadProgressError('Cloud upload failed: ' + (e.message || e.code || 'unknown') +
-        '\n\nMake sure Firebase Storage is enabled in your Firebase Console and that the security rules allow writes.');
-    }
-    input.value = '';
-    return;
-  }
-  /* Fallback: store as base64 in localStorage only (won't sync) */
-  showUploadProgress(`Saving "${label}" locally…`, `${file.name} • ${sizeKB} KB`);
-  updateUploadProgress(50, 'Encoding image…');
-  const reader = new FileReader();
-  reader.onload = e => {
-    const dataUrl = e.target.result;
-    const imgs = getSiteImages();
-    imgs[slotId] = dataUrl;
-    saveSiteImages(imgs);
-    renderImagesForm();
-    uploadProgressSuccess(`Saved locally only. (Enable Firebase Storage to sync across devices.)`);
-  };
-  reader.onerror = function() { uploadProgressError('Failed to read file.'); };
-  reader.readAsDataURL(file);
+  await uploadAndApplyImage(file, slotId);
+  input.value = '';
 }
 
-function saveImageSlot(slotId) {
+async function saveImageSlot(slotId) {
   const url = document.getElementById(`imgurl-${slotId}`)?.value.trim();
-  const imgs = getSiteImages();
   if (url) {
-    imgs[slotId] = url;
-    showToast('Image URL saved!', 'success');
+    await applyImageToSlot(slotId, url);
+    showToast('Image URL saved & synced!', 'success');
   } else {
-    delete imgs[slotId];
+    await removeImageFromSlot(slotId);
     showToast('Image removed.', 'success');
   }
-  saveSiteImages(imgs);
-  renderImagesForm();
 }
 
-function removeImageSlot(slotId) {
-  const imgs = getSiteImages();
-  delete imgs[slotId];
-  saveSiteImages(imgs);
-  renderImagesForm();
+async function removeImageSlot(slotId) {
+  await removeImageFromSlot(slotId);
   showToast('Image removed.', 'success');
 }
 
-function saveImages() {
-  /* Save ALL slots at once (the big Save button) */
-  const imgs = getSiteImages();
-  IMAGE_SLOTS.forEach(slot => {
+async function saveImages() {
+  /* Save ALL URL fields at once (the big Save button) */
+  let count = 0;
+  for (const slot of IMAGE_SLOTS) {
     const el = document.getElementById(`imgurl-${slot.id}`);
-    if (!el) return;
+    if (!el) continue;
     const v = el.value.trim();
-    if (v) imgs[slot.id] = v;
-    else if (!imgs[slot.id]) delete imgs[slot.id]; // only remove URL-type; keep file uploads
-  });
-  saveSiteImages(imgs);
-  showToast('All image URLs saved! Refresh any page to see changes.', 'success');
+    const current = getSiteImages()[slot.id] || '';
+    if (v && v !== current) { await applyImageToSlot(slot.id, v); count++; }
+  }
+  showToast(count ? (count + ' image URL(s) saved & synced!') : 'No changes to save.', 'success');
   renderImagesForm();
 }
 
@@ -4957,14 +4997,10 @@ function renderProductManageGrid() {
   }).join('');
 }
 
-function saveProdImgFromUrl(pid) {
+async function saveProdImgFromUrl(pid) {
   const url = document.getElementById(`pm-imgurl-${pid}`)?.value.trim();
-  const imgs = getSiteImages();
-  if (url) imgs['img_'+pid] = url; else delete imgs['img_'+pid];
-  saveSiteImages(imgs);
-  renderProductManageGrid();
-  if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
-  showToast(url ? 'Product image saved!' : 'Image cleared', 'success');
+  if (url) { await applyImageToSlot('img_'+pid, url); showToast('Product image saved & synced!', 'success'); }
+  else     { await removeImageFromSlot('img_'+pid); showToast('Image cleared', 'success'); }
 }
 
 function renderProductImagesGrid() {
@@ -4987,15 +5023,11 @@ function renderProductImagesGrid() {
             <div class="img-slot-v2-page">📄 order.html — product card</div>
             <div class="img-url-row">
               <input type="url" id="prodimgurl-${p.id}" value="${current.startsWith('data:') ? '' : current}" placeholder="Paste image URL…" oninput="livePreviewProdImg('${p.id}')">
-              <button class="btn btn-sm" style="background:#6b46c1;color:#fff" onclick="openImageLibrary('img_${p.id}')" title="Pick from bundled images">📚 Library</button>
+              <button class="btn btn-sm" style="background:#6b46c1;color:#fff" onclick="openImageLibrary('img_${p.id}')" title="Pick from library or upload">📚 Library / Upload</button>
               <button class="btn btn-sm btn-green" onclick="saveProdImgSlot('${p.id}')">Save URL</button>
-              <label class="upload-file-lbl" title="Local-only upload — won't sync across devices" style="opacity:.7">
-                📁 Upload (local)
-                <input type="file" class="upload-file-input" accept="image/*" onchange="handleProdImgUpload('${p.id}',this)">
-              </label>
               ${current ? `<button class="btn btn-sm btn-danger" onclick="removeProdImg('${p.id}')">✕</button>` : ''}
             </div>
-            ${current.startsWith('data:') ? `<p style="font-size:.7rem;color:var(--accent-dark);margin-top:.3rem">✅ Custom file uploaded</p>` : ''}
+            ${current.startsWith('data:') ? `<p style="font-size:.7rem;color:var(--accent-dark);margin-top:.3rem">✅ Uploaded image (synced)</p>` : ''}
           </div>
         </div>
       </div>`;
@@ -5013,61 +5045,18 @@ function livePreviewProdImg(pid) {
 async function handleProdImgUpload(pid, input) {
   const file = input.files[0]; if (!file) return;
   if (file.size > 5*1024*1024) { alert('Image too large (max 5 MB).'); input.value = ''; return; }
-  const sizeKB = Math.round(file.size / 1024);
-  console.log('[upload] handleProdImgUpload', { pid, fileName: file.name, sizeKB, type: file.type, storageReady: window.MGFJ_Sync && window.MGFJ_Sync.storageReady() });
-
-  /* Prefer Storage so it syncs across devices */
-  if (window.MGFJ_Sync && window.MGFJ_Sync.storageReady()) {
-    showUploadProgress(`Uploading ${pid} image…`, `${file.name} • ${sizeKB} KB`);
-    updateUploadProgress(0, 'Connecting to Firebase Storage…');
-    try {
-      const url = await window.MGFJ_Sync.uploadImage(file, 'img_'+pid, function(p){
-        updateUploadProgress(p, p < 100 ? `Uploaded ${p}% of ${sizeKB} KB` : 'Finishing up…');
-      });
-      const imgs = getSiteImages();
-      imgs['img_'+pid] = url;
-      saveSiteImages(imgs);
-      if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
-      if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
-      uploadProgressSuccess(`${pid} image uploaded & synced!`);
-    } catch (e) {
-      console.error('[upload] Storage upload failed', e);
-      uploadProgressError('Cloud upload failed: ' + (e.message || e.code || 'unknown') +
-        '\n\nMake sure Firebase Storage is enabled in your Firebase Console and that the security rules allow writes.');
-    }
-    input.value = '';
-    return;
-  }
-  /* Fallback: local-only base64 */
-  showUploadProgress(`Saving ${pid} image locally…`, `${file.name} • ${sizeKB} KB`);
-  updateUploadProgress(50, 'Encoding image…');
-  const reader = new FileReader();
-  reader.onload = e => {
-    const imgs = getSiteImages();
-    imgs['img_'+pid] = e.target.result;
-    saveSiteImages(imgs);
-    if (typeof renderProductImagesGrid === 'function') renderProductImagesGrid();
-    if (typeof renderProductManageGrid === 'function') renderProductManageGrid();
-    uploadProgressSuccess('Saved locally only. (Enable Firebase Storage to sync across devices.)');
-  };
-  reader.onerror = function() { uploadProgressError('Failed to read file.'); };
-  reader.readAsDataURL(file);
+  await uploadAndApplyImage(file, 'img_'+pid);
+  input.value = '';
 }
 
-function saveProdImgSlot(pid) {
+async function saveProdImgSlot(pid) {
   const url = document.getElementById(`prodimgurl-${pid}`)?.value.trim();
-  const imgs = getSiteImages();
-  if (url) imgs['img_'+pid] = url; else delete imgs['img_'+pid];
-  saveSiteImages(imgs);
-  renderProductImagesGrid();
-  showToast('Product image saved!', 'success');
+  if (url) { await applyImageToSlot('img_'+pid, url); showToast('Product image saved & synced!', 'success'); }
+  else     { await removeImageFromSlot('img_'+pid); showToast('Image cleared', 'success'); }
 }
 
-function removeProdImg(pid) {
-  const imgs = getSiteImages();
-  delete imgs['img_'+pid];
-  saveSiteImages(imgs);
-  renderProductImagesGrid();
+async function removeProdImg(pid) {
+  await removeImageFromSlot('img_'+pid);
   showToast('Product image removed.', 'success');
 }
 
