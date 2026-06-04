@@ -3349,12 +3349,18 @@ function drawBar(canvasId, labels, data, colour='#3aab5e') {
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.parentElement.clientWidth;
-  const H = parseInt(canvas.getAttribute('height')) || 160;
+  /* Cache logical height ONCE — setting canvas.height mutates the
+     height attribute, so re-reading it would compound each render. */
+  if (!canvas.dataset.logicalH) {
+    canvas.dataset.logicalH = parseInt(canvas.getAttribute('height')) || 160;
+  }
+  const H = parseInt(canvas.dataset.logicalH);
   canvas.width  = W * dpr;
   canvas.height = H * dpr;
   canvas.style.width  = W + 'px';
   canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
 
   const pad = { top:16, right:12, bottom:36, left:56 };
@@ -3408,14 +3414,18 @@ function drawDonut(canvasId, labels, data, colours) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
-  const size = parseInt(canvas.getAttribute('height')) || 160;
+  /* Cache logical height ONCE (see drawBar note) */
+  if (!canvas.dataset.logicalH) {
+    canvas.dataset.logicalH = parseInt(canvas.getAttribute('height')) || 160;
+  }
   const W = canvas.parentElement.clientWidth;
-  const H = size;
+  const H = parseInt(canvas.dataset.logicalH);
   canvas.width  = W * dpr;
   canvas.height = H * dpr;
   canvas.style.width  = W + 'px';
   canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   ctx.clearRect(0,0,W,H);
 
