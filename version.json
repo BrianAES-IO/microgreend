@@ -1,5 +1,5 @@
 {
-  "version": "20260604-1",
-  "released": "2026-06-04T16:00:00Z",
-  "notes": "Per-doc image storage (no Storage needed), library upload, chart fix"
+  "version": "20260604-2",
+  "released": "2026-06-04T17:30:00Z",
+  "notes": "Sync product availability to Firestore"
 }

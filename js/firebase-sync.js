@@ -220,6 +220,9 @@ window.MGFJ_Sync = {
   saveAffiliates(arr)    { return this._saveState('public_state', 'affiliates', arr); },
   subscribeAffiliates(cb){ return this._subscribeState('public_state', 'affiliates', cb); },
 
+  saveAvailability(obj)     { return this._saveState('public_state', 'availability', obj); },
+  subscribeAvailability(cb) { return this._subscribeState('public_state', 'availability', cb); },
+
   /* ── ADMIN-ONLY STATE ── */
   saveAdminState(key, data)      { return this._saveState('admin_state', key, data); },
   subscribeAdminState(key, cb)   { return this._subscribeState('admin_state', key, cb); },

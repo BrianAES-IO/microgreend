@@ -41,7 +41,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
-  <script src="js/firebase-sync.js?v=20260604-1"></script>
+  <script src="js/firebase-sync.js?v=20260604-2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -2776,9 +2776,10 @@ function startCloudSync() {
     _stateUnsubs.push(unsub);
   }
   /* Public state (also lets admin see live changes from other admin devices) */
-  syncStateInto('mgfj_products',   window.MGFJ_Sync.subscribeProducts.bind(window.MGFJ_Sync));
-  syncStateInto('mgfj_discounts',  window.MGFJ_Sync.subscribeDiscounts.bind(window.MGFJ_Sync));
-  syncStateInto('mgfj_affiliates', window.MGFJ_Sync.subscribeAffiliates.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_products',     window.MGFJ_Sync.subscribeProducts.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_discounts',    window.MGFJ_Sync.subscribeDiscounts.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_affiliates',   window.MGFJ_Sync.subscribeAffiliates.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_availability', window.MGFJ_Sync.subscribeAvailability.bind(window.MGFJ_Sync));
 
   /* Images: per-doc collection merged into the mgfj_images map */
   _stateUnsubs.push(window.MGFJ_Sync.subscribeImageDocs(function(map) {
@@ -3903,7 +3904,8 @@ function saveAvailability() {
   const av = {};
   getProducts().forEach(p => { av[p.id] = document.getElementById(`av-${p.id}`)?.checked ?? true; });
   localStorage.setItem('mgfj_availability', JSON.stringify(av));
-  showToast('Availability saved! Order page will reflect changes instantly.', 'success');
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAvailability(av);
+  showToast('Availability saved & synced to the order page!', 'success');
 }
 
 /* ── BLOG MANAGEMENT ── */

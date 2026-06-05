@@ -364,6 +364,15 @@
       try { localStorage.setItem('mgfj_affiliates', JSON.stringify(data)); } catch (e) {}
     });
 
+    /* Availability — controls which products show on the order page */
+    window.MGFJ_Sync.subscribeAvailability(function(data) {
+      if (!data || typeof data !== 'object') return;
+      try {
+        localStorage.setItem('mgfj_availability', JSON.stringify(data));
+        if (typeof window.renderProducts === 'function') window.renderProducts();
+      } catch (e) {}
+    });
+
     console.log('[MGFJ overrides] Public sync started — listening for admin changes');
   }
   /* Wait a tick for firebase-sync.js to finish initialising */
