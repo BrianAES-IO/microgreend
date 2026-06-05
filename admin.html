@@ -41,7 +41,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
-  <script src="js/firebase-sync.js?v=20260604-3"></script>
+  <script src="js/firebase-sync.js?v=20260604-4"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -1196,6 +1196,7 @@
         </div>
         <div class="sub-tabs">
           <button class="sub-tab active" onclick="switchSubTab('availability',this)">Product Availability</button>
+          <button class="sub-tab" onclick="switchSubTab('delivery-areas',this)">Delivery Areas</button>
           <button class="sub-tab" onclick="switchSubTab('blog',this)">Blog Posts</button>
           <button class="sub-tab" onclick="switchSubTab('images',this)">Site Images</button>
           <button class="sub-tab" onclick="switchSubTab('crops',this)">Homepage Lineup</button>
@@ -1208,6 +1209,15 @@
             <button class="btn btn-primary btn-sm" onclick="saveAvailability()">Save Changes</button>
           </div>
           <div class="avail-grid" id="availGrid"></div>
+        </div>
+
+        <!-- Delivery Areas sub-pane -->
+        <div class="sub-pane" id="sub-delivery-areas">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:.75rem">
+            <p style="font-size:.84rem;color:var(--text-sub);max-width:600px">Tick the parishes you currently deliver to. Customers in unticked parishes will see a notice on the order page and won't be able to place an order (they'll be prompted to contact you instead).</p>
+            <button class="btn btn-primary btn-sm" onclick="saveDeliveryAreas()">Save Delivery Areas</button>
+          </div>
+          <div class="avail-grid" id="deliveryAreasGrid"></div>
         </div>
 
         <!-- Blog sub-pane -->
@@ -2810,6 +2820,7 @@ function startCloudSync() {
   syncStateInto('mgfj_discounts',    window.MGFJ_Sync.subscribeDiscounts.bind(window.MGFJ_Sync));
   syncStateInto('mgfj_affiliates',   window.MGFJ_Sync.subscribeAffiliates.bind(window.MGFJ_Sync));
   syncStateInto('mgfj_availability', window.MGFJ_Sync.subscribeAvailability.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_delivery_parishes', window.MGFJ_Sync.subscribeDeliveryParishes.bind(window.MGFJ_Sync));
 
   /* Images: per-doc collection merged into the mgfj_images map */
   _stateUnsubs.push(window.MGFJ_Sync.subscribeImageDocs(function(map) {
@@ -3882,6 +3893,7 @@ function sendEmail() {
 ════════════════════════════════════════════════ */
 function renderManage() {
   renderAvailability();
+  renderDeliveryAreas();
   renderBlog();
   renderImagesForm();
   renderCrops();
@@ -3937,6 +3949,37 @@ function saveAvailability() {
   localStorage.setItem('mgfj_availability', JSON.stringify(av));
   if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveAvailability(av);
   showToast('Availability saved & synced to the order page!', 'success');
+}
+
+/* ── DELIVERY AREAS ── */
+const ALL_PARISHES = ['Kingston','St. Andrew','St. Catherine','Clarendon','Manchester','St. Elizabeth','Westmoreland','Hanover','St. James','Trelawny','St. Ann','St. Mary','Portland','St. Thomas'];
+const DEFAULT_DELIVERY_PARISHES = ['Kingston','St. Andrew','St. Catherine'];
+function getDeliveryParishes() {
+  try {
+    const s = JSON.parse(localStorage.getItem('mgfj_delivery_parishes') || 'null');
+    if (Array.isArray(s) && s.length) return s;
+  } catch (e) {}
+  return [...DEFAULT_DELIVERY_PARISHES];
+}
+function renderDeliveryAreas() {
+  const grid = document.getElementById('deliveryAreasGrid');
+  if (!grid) return;
+  const allowed = getDeliveryParishes();
+  grid.innerHTML = ALL_PARISHES.map(function(p) {
+    const on = allowed.indexOf(p) !== -1;
+    return '<label class="avail-item" style="display:flex;align-items:center;gap:.6rem;padding:.7rem .9rem;border:1.5px solid var(--border);border-radius:10px;cursor:pointer">' +
+      '<input type="checkbox" class="da-check" value="' + p + '" ' + (on ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--accent)">' +
+      '<span style="font-weight:600;font-size:.88rem">' + p + '</span>' +
+    '</label>';
+  }).join('');
+}
+function saveDeliveryAreas() {
+  const checked = Array.from(document.querySelectorAll('#deliveryAreasGrid .da-check:checked')).map(function(c){ return c.value; });
+  if (!checked.length) { showToast('Select at least one parish.', 'error'); return; }
+  localStorage.setItem('mgfj_delivery_parishes', JSON.stringify(checked));
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveDeliveryParishes(checked);
+  if (typeof addAuditEntry === 'function') addAuditEntry('Delivery Areas', checked.join(', '));
+  showToast('Delivery areas saved & synced to the order page!', 'success');
 }
 
 /* ── BLOG MANAGEMENT ── */

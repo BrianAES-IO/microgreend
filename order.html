@@ -52,7 +52,7 @@
   <meta name="twitter:description" content="Harvested Saturday morning, delivered to your door the same day. Order by Friday 12pm.">
   <meta name="twitter:image" content="https://www.microgreensfarmja.farm/logo.svg">
 
-  <link rel="stylesheet" href="styles.css?v=20260604-3">
+  <link rel="stylesheet" href="styles.css?v=20260604-4">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
@@ -228,7 +228,7 @@
               </div>
               <div class="form-group">
                 <label for="parish">Parish <span class="req">*</span></label>
-                <select id="parish" name="parish" required>
+                <select id="parish" name="parish" required onchange="checkParishDelivery()">
                   <option value="">Select parish</option>
                   <option>Kingston</option>
                   <option>St. Andrew</option>
@@ -245,6 +245,24 @@
                   <option>Clarendon</option>
                   <option>St. Catherine</option>
                 </select>
+              </div>
+            </div>
+
+            <!-- Out-of-area delivery notice -->
+            <div id="parish-notice" style="display:none;background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:1rem 1.15rem;margin-top:.25rem">
+              <div style="display:flex;gap:.65rem;align-items:flex-start">
+                <i class="fa-solid fa-triangle-exclamation" style="color:#d97706;font-size:1.2rem;flex-shrink:0;margin-top:.1rem"></i>
+                <div>
+                  <strong style="display:block;color:#92400e;font-size:.92rem;margin-bottom:.25rem">We don't currently deliver to <span id="parish-notice-name">this parish</span></strong>
+                  <p style="margin:0;font-size:.84rem;color:#78350f;line-height:1.5">
+                    Right now we only deliver to <strong id="parish-allowed-list">Kingston, St. Andrew &amp; St. Catherine</strong>.
+                    If you really need this order, please reach out and we'll see what we can do:
+                  </p>
+                  <a id="parish-call-link" href="https://wa.me/18762832127" target="_blank" rel="noopener"
+                     style="display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;background:#25d366;color:#fff;padding:.5rem 1rem;border-radius:8px;font-weight:700;font-size:.85rem;text-decoration:none">
+                    <i class="fa-brands fa-whatsapp"></i> Contact us on WhatsApp
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -440,10 +458,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="js/firebase-sync.js?v=20260604-3"></script>
-<script src="js/main.js?v=20260604-3"></script>
-<script src="js/overrides.js?v=20260604-3"></script>
-<script src="js/cookie-consent.js?v=20260604-3" defer></script>
+<script src="js/firebase-sync.js?v=20260604-4"></script>
+<script src="js/main.js?v=20260604-4"></script>
+<script src="js/overrides.js?v=20260604-4"></script>
+<script src="js/cookie-consent.js?v=20260604-4" defer></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -513,6 +531,42 @@ const DEFAULT_PRODUCTS = [
     img: 'https://lh3.googleusercontent.com/sitesv/AA5AbUB_yv60m4WHb_x-MR9YNHGnIUTq78DpyNeFzh-Zz2H4yHYLGqREXM8Kxw7S_G3l83mq8s4DxXnPMwnJHRHG-MMqMa6rGLk0FTNAo6Fx1uyYjHFQMMqt8c3UxzQo5_V7rQJL7SFAP4=w1280',
   },
 ];
+
+/* ── DELIVERY AREA (admin-controlled, synced from Firestore) ── */
+const DEFAULT_DELIVERY_PARISHES = ['Kingston', 'St. Andrew', 'St. Catherine'];
+function getDeliveryParishes() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('mgfj_delivery_parishes') || 'null');
+    if (Array.isArray(stored) && stored.length) return stored;
+  } catch (e) {}
+  return [...DEFAULT_DELIVERY_PARISHES];
+}
+function isParishDeliverable(parish) {
+  if (!parish) return false;
+  const allowed = getDeliveryParishes().map(p => p.toLowerCase().trim());
+  return allowed.includes(parish.toLowerCase().trim());
+}
+/* Show/hide the out-of-area notice + disable the submit button */
+function checkParishDelivery() {
+  const sel = document.getElementById('parish');
+  const notice = document.getElementById('parish-notice');
+  const submitBtn = document.getElementById('place-order-btn');
+  if (!sel || !notice) return;
+  const parish = sel.value;
+  const allowed = getDeliveryParishes();
+  /* keep the notice's allowed-list text in sync with admin settings */
+  const listEl = document.getElementById('parish-allowed-list');
+  if (listEl) listEl.textContent = allowed.join(', ');
+  if (parish && !isParishDeliverable(parish)) {
+    document.getElementById('parish-notice-name').textContent = parish;
+    notice.style.display = '';
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '.5'; submitBtn.style.cursor = 'not-allowed'; }
+  } else {
+    notice.style.display = 'none';
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = ''; submitBtn.style.cursor = ''; }
+  }
+}
+window.checkParishDelivery = checkParishDelivery;
 
 /* Load products from admin localStorage (falls back to defaults) */
 function getProducts() {
@@ -702,6 +756,17 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
       errorEl.style.display = '';
       return;
     }
+  }
+
+  /* Block orders outside the delivery area */
+  if (!isParishDeliverable(data.parish)) {
+    errorEl.innerHTML = 'Sorry, we don\'t currently deliver to ' + data.parish +
+      '. We deliver to ' + getDeliveryParishes().join(', ') +
+      '. Please contact us on WhatsApp if you really need this order.';
+    errorEl.style.display = '';
+    const notice = document.getElementById('parish-notice');
+    if (notice) notice.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
   }
 
   const now = new Date();

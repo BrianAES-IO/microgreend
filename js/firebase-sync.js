@@ -223,6 +223,9 @@ window.MGFJ_Sync = {
   saveAvailability(obj)     { return this._saveState('public_state', 'availability', obj); },
   subscribeAvailability(cb) { return this._subscribeState('public_state', 'availability', cb); },
 
+  saveDeliveryParishes(arr)     { return this._saveState('public_state', 'delivery_parishes', arr); },
+  subscribeDeliveryParishes(cb) { return this._subscribeState('public_state', 'delivery_parishes', cb); },
+
   /* ── ADMIN-ONLY STATE ── */
   saveAdminState(key, data)      { return this._saveState('admin_state', key, data); },
   subscribeAdminState(key, cb)   { return this._subscribeState('admin_state', key, cb); },

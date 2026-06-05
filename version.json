@@ -1,5 +1,5 @@
 {
-  "version": "20260604-3",
-  "released": "2026-06-04T18:30:00Z",
-  "notes": "First-harvest delivery date, order delete (one/all), one-time seed"
+  "version": "20260604-4",
+  "released": "2026-06-04T19:30:00Z",
+  "notes": "Delivery-area restriction + admin region control"
 }

@@ -373,6 +373,15 @@
       } catch (e) {}
     });
 
+    /* Delivery parishes — controls which regions can place an order */
+    window.MGFJ_Sync.subscribeDeliveryParishes(function(data) {
+      if (!Array.isArray(data) || !data.length) return;
+      try {
+        localStorage.setItem('mgfj_delivery_parishes', JSON.stringify(data));
+        if (typeof window.checkParishDelivery === 'function') window.checkParishDelivery();
+      } catch (e) {}
+    });
+
     console.log('[MGFJ overrides] Public sync started — listening for admin changes');
   }
   /* Wait a tick for firebase-sync.js to finish initialising */
