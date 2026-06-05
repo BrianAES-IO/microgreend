@@ -52,7 +52,7 @@
   <meta name="twitter:description" content="Harvested Saturday morning, delivered to your door the same day. Order by Friday 12pm.">
   <meta name="twitter:image" content="https://www.microgreensfarmja.farm/logo.svg">
 
-  <link rel="stylesheet" href="styles.css?v=20260604-2">
+  <link rel="stylesheet" href="styles.css?v=20260604-3">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
@@ -359,6 +359,12 @@
     <p class="order-ref-label">Your order reference</p>
     <p class="order-ref-num" id="success-order-id"></p>
 
+    <!-- Delivery date banner -->
+    <div style="margin:1.25rem auto 0;background:var(--forest);color:#fff;border-radius:10px;padding:.85rem 1.1rem;max-width:340px">
+      <div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;opacity:.8">🚚 Your delivery date</div>
+      <div style="font-size:1.05rem;font-weight:800;color:var(--gold);margin-top:.2rem" id="success-delivery-date">Saturday</div>
+    </div>
+
     <!-- QR Code -->
     <div id="receipt-qr" style="margin:1.25rem auto 0;display:flex;justify-content:center"></div>
     <p style="color:var(--text-mid);font-size:.82rem;margin-top:.5rem;text-align:center">Show this QR code on delivery for instant confirmation</p>
@@ -434,10 +440,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="js/firebase-sync.js?v=20260604-2"></script>
-<script src="js/main.js?v=20260604-2"></script>
-<script src="js/overrides.js?v=20260604-2"></script>
-<script src="js/cookie-consent.js?v=20260604-2" defer></script>
+<script src="js/firebase-sync.js?v=20260604-3"></script>
+<script src="js/main.js?v=20260604-3"></script>
+<script src="js/overrides.js?v=20260604-3"></script>
+<script src="js/cookie-consent.js?v=20260604-3" defer></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -727,10 +733,20 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
   /* Affiliate ref */
   const affRef = window.MGFJ_Affiliate ? window.MGFJ_Affiliate.getCurrent() : null;
 
+  /* Delivery date — first-harvest floor handled by getNextHarvestInfo() */
+  let deliveryDateISO = null, deliveryDateStr = 'this Saturday';
+  if (typeof getNextHarvestInfo === 'function') {
+    const hi = getNextHarvestInfo();
+    deliveryDateISO = hi.deliverySaturday.toISOString();
+    deliveryDateStr = hi.deliverySaturdayStr;
+  }
+
   const order = {
     id: orderId,
     status: 'pending',
     createdAt: now.toISOString(),
+    deliveryDate: deliveryDateISO,
+    deliveryDateStr: deliveryDateStr,
     customer: {
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
@@ -804,6 +820,12 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
   window._lastOrder = order;
 
   document.getElementById('success-order-id').textContent = orderId;
+  /* Fill in the delivery date for this specific order */
+  document.querySelectorAll('#success-modal [data-harvest-date]').forEach(function(el){
+    el.textContent = deliveryDateStr;
+  });
+  const dd = document.getElementById('success-delivery-date');
+  if (dd) dd.textContent = deliveryDateStr;
   const modal = document.getElementById('success-modal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';

@@ -1,5 +1,5 @@
 {
-  "version": "20260604-2",
-  "released": "2026-06-04T17:30:00Z",
-  "notes": "Sync product availability to Firestore"
+  "version": "20260604-3",
+  "released": "2026-06-04T18:30:00Z",
+  "notes": "First-harvest delivery date, order delete (one/all), one-time seed"
 }

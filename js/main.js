@@ -74,6 +74,10 @@
 })();
 
 /* ── HARVEST DATE HELPER ─────────────────────────────── */
+/* First-ever harvest. Until this date, every order is delivered on the
+   launch day. After it, the normal weekly Saturday cadence applies. */
+const FIRST_HARVEST = new Date('2026-06-27T00:00:00');
+
 function getNextHarvestInfo() {
   const now = new Date();
   const day = now.getDay(); // 0=Sun … 6=Sat
@@ -88,13 +92,21 @@ function getNextHarvestInfo() {
   cutoffFriday.setDate(thisSaturday.getDate() - 1);
   cutoffFriday.setHours(12, 0, 0, 0);
 
-  const cutoffPassed = now > cutoffFriday;
+  let cutoffPassed = now > cutoffFriday;
 
   // If the window for THIS Saturday has closed, the next delivery is
   // the FOLLOWING Saturday (one week later).
-  const deliverySaturday = cutoffPassed
+  let deliverySaturday = cutoffPassed
     ? new Date(thisSaturday.getTime() + 7 * 24 * 60 * 60 * 1000)
     : thisSaturday;
+
+  // ── First-harvest floor ──
+  // Before launch, every order is delivered on the first harvest date,
+  // regardless of which Saturday the weekly maths would otherwise pick.
+  if (deliverySaturday < FIRST_HARVEST) {
+    deliverySaturday = new Date(FIRST_HARVEST);
+    cutoffPassed = false; // no "window closed" warning during pre-launch
+  }
 
   // Corresponding order deadline for the upcoming delivery
   const nextDeadline = new Date(deliverySaturday);

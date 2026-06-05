@@ -41,7 +41,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
-  <script src="js/firebase-sync.js?v=20260604-2"></script>
+  <script src="js/firebase-sync.js?v=20260604-3"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -1080,6 +1080,7 @@
           <div style="display:flex;gap:.5rem;flex-wrap:wrap">
             <button class="btn btn-primary" onclick="openQRScanner()" style="display:flex;align-items:center;gap:.4rem">📱 Scan QR</button>
             <button class="btn btn-excel" onclick="downloadExcel()">⬇ Export Excel</button>
+            <button class="btn btn-danger" onclick="deleteAllOrders()" style="display:flex;align-items:center;gap:.4rem">🗑 Delete All</button>
           </div>
         </div>
         <div class="filter-bar">
@@ -2677,16 +2678,14 @@ function saveOrders(orders) {
   localStorage.setItem('mgfj_orders', JSON.stringify(orders));
 }
 function seedIfEmpty() {
+  /* Seed demo orders ONLY once ever. After the first seed, never re-add
+     them — otherwise deleting orders would just bring the demos back. */
+  if (localStorage.getItem('mgfj_seeded') === '1') return;
   const existing = getOrders();
   if (existing.length === 0) {
     saveOrders(SEED);
-  } else {
-    // Merge seed IDs that don't already exist
-    const ids = new Set(existing.map(o => o.id));
-    const merged = [...existing];
-    SEED.forEach(s => { if (!ids.has(s.id)) merged.push(s); });
-    saveOrders(merged);
   }
+  localStorage.setItem('mgfj_seeded', '1');
 }
 function updateOrderStatus(id, newStatus) {
   const orders = getOrders();
@@ -2706,6 +2705,37 @@ function updateOrderStatus(id, newStatus) {
       paymentMethod: o.paymentMethod || null
     });
   }
+  refreshAll();
+}
+
+/* Delete a single order — local + Firestore */
+async function deleteOneOrder(id) {
+  if (!confirm('Delete order ' + id + '? This cannot be undone.')) return;
+  saveOrders(getOrders().filter(function(o){ return o.id !== id; }));
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+    try { await window.MGFJ_Sync.deleteOrder(id); } catch (e) { console.error('cloud delete failed', e); }
+  }
+  if (typeof addAuditEntry === 'function') addAuditEntry('Order Deleted', id);
+  if (typeof showToast === 'function') showToast('Order ' + id + ' deleted', 'success');
+  refreshAll();
+}
+
+/* Delete ALL orders — local + Firestore */
+async function deleteAllOrders() {
+  const orders = getOrders();
+  if (!orders.length) { showToast('No orders to delete.', 'error'); return; }
+  if (!confirm('⚠ Delete ALL ' + orders.length + ' orders? This permanently removes every order from all devices and cannot be undone.')) return;
+  if (!confirm('Are you absolutely sure? Type-checking skipped — this is your final confirmation.')) return;
+  /* Delete from Firestore */
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+    showToast('Deleting all orders from cloud…');
+    for (const o of orders) {
+      try { await window.MGFJ_Sync.deleteOrder(o.id); } catch (e) { console.error('delete', o.id, e); }
+    }
+  }
+  saveOrders([]);
+  if (typeof addAuditEntry === 'function') addAuditEntry('All Orders Deleted', orders.length + ' orders removed');
+  if (typeof showToast === 'function') showToast('All orders deleted', 'success');
   refreshAll();
 }
 
@@ -3115,6 +3145,7 @@ function renderOrdersTable() {
         <div style="display:flex;gap:.35rem;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" onclick="openOrderModal('${o.id}')">View</button>
           ${nextStatusBtn(o)}
+          <button class="btn btn-danger btn-sm" onclick="deleteOneOrder('${o.id}')" title="Delete this order">🗑</button>
         </div>
       </td>
     </tr>`).join('');
@@ -7974,7 +8005,7 @@ function renderWeekSelector(weeks) {
           '<td style="font-size:.78rem;color:var(--text-sub)">' + o.items.map(function(i) { return getItemName(i) + ' ' + getItemSize(i) + ' ×' + i.qty; }).join('<br>') + '</td>' +
           '<td><strong>' + fmtJMD(o.total) + '</strong>' + (o.discount ? '<br><span style="font-size:.72rem;color:#2d6a4f">-' + fmtJMD(o.discount) + ' disc</span>' : '') + '</td>' +
           '<td><span class="badge badge-' + o.status + '">' + STATUS_LABELS[o.status] + '</span></td>' +
-          '<td><div style="display:flex;gap:.35rem;flex-wrap:wrap"><button class="btn btn-outline btn-sm" onclick="openOrderModal(\'' + o.id + '\')">View</button>' + nextStatusBtn(o) + '</div></td>' +
+          '<td><div style="display:flex;gap:.35rem;flex-wrap:wrap"><button class="btn btn-outline btn-sm" onclick="openOrderModal(\'' + o.id + '\')">View</button>' + nextStatusBtn(o) + '<button class="btn btn-danger btn-sm" onclick="deleteOneOrder(\'' + o.id + '\')" title="Delete this order">🗑</button></div></td>' +
           '</tr>';
       }).join('');
 
