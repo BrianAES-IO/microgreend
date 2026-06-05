@@ -226,6 +226,42 @@ window.MGFJ_Sync = {
   saveDeliveryParishes(arr)     { return this._saveState('public_state', 'delivery_parishes', arr); },
   subscribeDeliveryParishes(cb) { return this._subscribeState('public_state', 'delivery_parishes', cb); },
 
+  /* Weekly stock limits per crop (admin sets) */
+  saveStockLimits(obj)     { return this._saveState('public_state', 'stock_limits', obj); },
+  subscribeStockLimits(cb) { return this._subscribeState('public_state', 'stock_limits', cb); },
+
+  /* ── WEEKLY STOCK COUNTERS (public, per delivery week) ──
+     stock_counts/{weekKey} = { cropId: soldQty, ... }
+     Anonymous customers increment these as they order; the order
+     page reads them to know how much of each crop is left. */
+  async incrementStock(weekKey, items) {
+    if (!this.ready()) return false;
+    try {
+      const patch = {};
+      items.forEach(function(it) {
+        patch[it.cropId] = firebase.firestore.FieldValue.increment(it.qty);
+      });
+      await window._db.collection('stock_counts').doc(weekKey).set(patch, { merge: true });
+      return true;
+    } catch (e) { console.error('[MGFJ] incrementStock failed', e); return false; }
+  },
+  subscribeStockCounts(weekKey, onChange) {
+    if (!this.ready()) { onChange({}); return function(){}; }
+    return window._db.collection('stock_counts').doc(weekKey).onSnapshot(function(doc) {
+      onChange(doc.exists ? (doc.data() || {}) : {});
+    }, function(err){ console.warn('[MGFJ] stock_counts listener:', err.message); });
+  },
+  async resetStockCounts(weekKey) {
+    if (!this.ready()) return false;
+    try { await window._db.collection('stock_counts').doc(weekKey).delete(); return true; }
+    catch (e) { console.error('[MGFJ] resetStockCounts failed', e); return false; }
+  },
+  async getStockCountsOnce(weekKey) {
+    if (!this.ready()) return {};
+    try { const d = await window._db.collection('stock_counts').doc(weekKey).get(); return d.exists ? (d.data()||{}) : {}; }
+    catch (e) { return {}; }
+  },
+
   /* ── ADMIN-ONLY STATE ── */
   saveAdminState(key, data)      { return this._saveState('admin_state', key, data); },
   subscribeAdminState(key, cb)   { return this._subscribeState('admin_state', key, cb); },

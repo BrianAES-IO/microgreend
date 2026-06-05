@@ -52,7 +52,7 @@
   <meta name="twitter:description" content="Harvested Saturday morning, delivered to your door the same day. Order by Friday 12pm.">
   <meta name="twitter:image" content="https://www.microgreensfarmja.farm/logo.svg">
 
-  <link rel="stylesheet" href="styles.css?v=20260604-4">
+  <link rel="stylesheet" href="styles.css?v=20260604-5">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
@@ -458,10 +458,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="js/firebase-sync.js?v=20260604-4"></script>
-<script src="js/main.js?v=20260604-4"></script>
-<script src="js/overrides.js?v=20260604-4"></script>
-<script src="js/cookie-consent.js?v=20260604-4" defer></script>
+<script src="js/firebase-sync.js?v=20260604-5"></script>
+<script src="js/main.js?v=20260604-5"></script>
+<script src="js/overrides.js?v=20260604-5"></script>
+<script src="js/cookie-consent.js?v=20260604-5" defer></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -587,6 +587,29 @@ let appliedDiscount = null; // { discount, newTotal, code: discountObject }
 
 function fmtJMD(n) { return 'J$' + n.toLocaleString('en-JM'); }
 
+/* ── STOCK HELPERS ───────────────────────────────────── */
+/* Current delivery-week key (matches admin) — YYYY-MM-DD of delivery Saturday */
+function currentWeekKey() {
+  if (typeof getNextHarvestInfo === 'function') {
+    return getNextHarvestInfo().deliverySaturday.toISOString().slice(0,10);
+  }
+  return 'default';
+}
+function getStockLimits() {
+  try { return JSON.parse(localStorage.getItem('mgfj_stock_limits') || '{}'); } catch(e) { return {}; }
+}
+function getStockCounts() {
+  try { return JSON.parse(localStorage.getItem('mgfj_stock_counts') || '{}'); } catch(e) { return {}; }
+}
+/* Remaining containers for a crop this week. null = no limit set (unlimited). */
+function stockRemaining(cropId) {
+  const limits = getStockLimits();
+  const lim = parseInt(limits[cropId], 10);
+  if (!lim || lim <= 0) return null;           // no limit configured
+  const sold = parseInt(getStockCounts()[cropId] || 0, 10) || 0;
+  return Math.max(0, lim - sold);
+}
+
 /* ── RENDER PRODUCTS ─────────────────────────────────── */
 function renderProducts() {
   /* Read admin-set availability; default all true if not set */
@@ -595,12 +618,26 @@ function renderProducts() {
 
   const list = document.getElementById('product-list');
   list.innerHTML = PRODUCTS.map(p => {
-    const inStock = avail[p.id] !== false; /* undefined = available */
+    const manuallyOn = avail[p.id] !== false;     /* admin toggle */
+    const remaining  = stockRemaining(p.id);       /* null = unlimited */
+    const soldOut    = remaining !== null && remaining <= 0;
+    const inStock    = manuallyOn && !soldOut;
+    /* Clamp any cart qty above remaining */
+    if (remaining !== null && cart[p.id] && cart[p.id].qty > remaining) {
+      if (remaining === 0) delete cart[p.id];
+      else cart[p.id].qty = remaining;
+    }
+    let stockNote = '';
+    if (manuallyOn && remaining !== null && remaining > 0 && remaining <= 5) {
+      stockNote = `<p class="pco-stock-note" style="color:#b45309">Only ${remaining} left this week!</p>`;
+    }
+    const outLabel = !manuallyOn ? 'Currently unavailable — check back next Saturday.'
+                                 : 'Sold out for this week — check back next Saturday.';
     return `
     <div class="product-card-order${inStock ? '' : ' pco-unavailable'}" id="pc-${p.id}" data-product-id="${p.id}">
       <div class="pco-img" style="position:relative">
         <img src="${p.img}" alt="${p.name}" loading="lazy"${inStock ? '' : ' style="opacity:.45;filter:grayscale(1)"'}>
-        ${inStock ? '' : '<div class="pco-out-badge">Out of Stock</div>'}
+        ${inStock ? '' : '<div class="pco-out-badge">' + (soldOut ? 'Sold Out' : 'Out of Stock') + '</div>'}
       </div>
       <div class="pco-body">
         <h4 class="h4">${p.name}</h4>
@@ -613,9 +650,9 @@ function renderProducts() {
           ${inStock ? `
           <div class="qty-wrap">
             <button class="qty-btn" onclick="changeQty('${p.id}',-1)" aria-label="Decrease">−</button>
-            <span class="qty-num" id="qty-${p.id}">0</span>
+            <span class="qty-num" id="qty-${p.id}">${(cart[p.id] && cart[p.id].qty) || 0}</span>
             <button class="qty-btn" onclick="changeQty('${p.id}',1)" aria-label="Increase">+</button>
-          </div>` : `<p class="pco-stock-note">Currently unavailable — check back next Saturday.</p>`}
+          </div>${stockNote}` : `<p class="pco-stock-note">${outLabel}</p>`}
         </div>
       </div>
     </div>`;
@@ -626,7 +663,16 @@ function renderProducts() {
 function changeQty(pid, delta) {
   const product = PRODUCTS.find(p => p.id === pid);
   const item = cart[pid] || { product, qty: 0 };
-  item.qty = Math.max(0, item.qty + delta);
+  let next = Math.max(0, item.qty + delta);
+  /* Don't allow ordering more than this week's remaining stock */
+  const remaining = stockRemaining(pid);
+  if (delta > 0 && remaining !== null && next > remaining) {
+    next = remaining;
+    if (typeof showFeedback === 'function') {
+      showFeedback('Only ' + remaining + ' ' + product.name + ' left for this week.', false);
+    }
+  }
+  item.qty = next;
   if (item.qty === 0) {
     delete cart[pid];
   } else {
@@ -856,6 +902,12 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
       console.warn('Cloud sync not ready — order saved locally only');
     }
 
+    /* Increment this week's stock counters so remaining stock updates everywhere */
+    if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+      const stockItems = orderItems.map(function(it){ return { cropId: it.productId, qty: it.qty }; });
+      window.MGFJ_Sync.incrementStock(currentWeekKey(), stockItems);
+    }
+
     /* Record discount use */
     if (discountCode && window.MGFJ_Discount) {
       window.MGFJ_Discount.recordUse(discountCode);
@@ -1068,6 +1120,27 @@ function buildReceiptCanvas(order, qrImg) {
 }
 
 renderProducts();
+window.renderProducts = renderProducts;
+
+/* ── Live stock sync (limits + this week's sold counts) ── */
+(function initStockSync() {
+  if (!window.MGFJ_Sync || !window.MGFJ_Sync.ready()) {
+    setTimeout(initStockSync, 800);
+    return;
+  }
+  /* Admin-set weekly limits */
+  window.MGFJ_Sync.subscribeStockLimits(function(limits) {
+    if (limits && typeof limits === 'object') {
+      localStorage.setItem('mgfj_stock_limits', JSON.stringify(limits));
+      renderProducts();
+    }
+  });
+  /* This delivery week's sold counts */
+  window.MGFJ_Sync.subscribeStockCounts(currentWeekKey(), function(counts) {
+    localStorage.setItem('mgfj_stock_counts', JSON.stringify(counts || {}));
+    renderProducts();
+  });
+})();
 </script>
 </body>
 </html>

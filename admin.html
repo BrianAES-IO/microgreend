@@ -41,7 +41,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
-  <script src="js/firebase-sync.js?v=20260604-4"></script>
+  <script src="js/firebase-sync.js?v=20260604-5"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -1196,6 +1196,7 @@
         </div>
         <div class="sub-tabs">
           <button class="sub-tab active" onclick="switchSubTab('availability',this)">Product Availability</button>
+          <button class="sub-tab" onclick="switchSubTab('stock',this)">Weekly Stock</button>
           <button class="sub-tab" onclick="switchSubTab('delivery-areas',this)">Delivery Areas</button>
           <button class="sub-tab" onclick="switchSubTab('blog',this)">Blog Posts</button>
           <button class="sub-tab" onclick="switchSubTab('images',this)">Site Images</button>
@@ -1209,6 +1210,20 @@
             <button class="btn btn-primary btn-sm" onclick="saveAvailability()">Save Changes</button>
           </div>
           <div class="avail-grid" id="availGrid"></div>
+        </div>
+
+        <!-- Weekly Stock sub-pane -->
+        <div class="sub-pane" id="sub-stock">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem;flex-wrap:wrap;gap:.75rem">
+            <p style="font-size:.84rem;color:var(--text-sub);max-width:640px">Set how many 8oz containers of each crop you'll supply <strong>this delivery week</strong>. Once orders reach the limit, the crop is automatically marked <em>Sold Out</em> on the order page. Leave 0 / blank for unlimited.</p>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" onclick="recalcStockFromOrders()" title="Recount sold from actual orders">↻ Recalc from orders</button>
+              <button class="btn btn-outline btn-sm" onclick="resetWeekStock()" title="Reset this week's sold counts to zero">Reset week</button>
+              <button class="btn btn-primary btn-sm" onclick="saveStockLimits()">Save Limits</button>
+            </div>
+          </div>
+          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:1rem">Delivery week: <strong id="stockWeekLabel">—</strong></p>
+          <div id="stockGrid"></div>
         </div>
 
         <!-- Delivery Areas sub-pane -->
@@ -2821,6 +2836,14 @@ function startCloudSync() {
   syncStateInto('mgfj_affiliates',   window.MGFJ_Sync.subscribeAffiliates.bind(window.MGFJ_Sync));
   syncStateInto('mgfj_availability', window.MGFJ_Sync.subscribeAvailability.bind(window.MGFJ_Sync));
   syncStateInto('mgfj_delivery_parishes', window.MGFJ_Sync.subscribeDeliveryParishes.bind(window.MGFJ_Sync));
+  syncStateInto('mgfj_stock_limits', window.MGFJ_Sync.subscribeStockLimits.bind(window.MGFJ_Sync));
+  /* This week's live sold counts */
+  if (typeof currentDeliveryWeekKey === 'function') {
+    _stateUnsubs.push(window.MGFJ_Sync.subscribeStockCounts(currentDeliveryWeekKey(), function(counts){
+      localStorage.setItem('mgfj_stock_counts', JSON.stringify(counts || {}));
+      if (currentTab === 'manage' && typeof renderStockLimits === 'function') renderStockLimits();
+    }));
+  }
 
   /* Images: per-doc collection merged into the mgfj_images map */
   _stateUnsubs.push(window.MGFJ_Sync.subscribeImageDocs(function(map) {
@@ -3894,6 +3917,7 @@ function sendEmail() {
 function renderManage() {
   renderAvailability();
   renderDeliveryAreas();
+  renderStockLimits();
   renderBlog();
   renderImagesForm();
   renderCrops();
@@ -3980,6 +4004,97 @@ function saveDeliveryAreas() {
   if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveDeliveryParishes(checked);
   if (typeof addAuditEntry === 'function') addAuditEntry('Delivery Areas', checked.join(', '));
   showToast('Delivery areas saved & synced to the order page!', 'success');
+}
+
+/* ── WEEKLY STOCK LIMITS ── */
+const STOCK_FIRST_HARVEST = new Date('2026-06-27T00:00:00');
+/* Delivery-week key, floored to the first harvest — matches order.html */
+function currentDeliveryWeekKey() {
+  const now = new Date();
+  const day = now.getDay();
+  const daysToSat = (6 - day + 7) % 7 || 7;
+  let sat = new Date(now); sat.setDate(now.getDate() + daysToSat); sat.setHours(0,0,0,0);
+  const cutoff = new Date(sat); cutoff.setDate(sat.getDate() - 1); cutoff.setHours(12,0,0,0);
+  if (now > cutoff) sat = new Date(sat.getTime() + 7*24*60*60*1000);
+  if (sat < STOCK_FIRST_HARVEST) sat = new Date(STOCK_FIRST_HARVEST);
+  return sat.toISOString().slice(0,10);
+}
+function getStockLimitsAdmin() {
+  try { return JSON.parse(localStorage.getItem('mgfj_stock_limits') || '{}'); } catch(e) { return {}; }
+}
+function getStockCountsAdmin() {
+  try { return JSON.parse(localStorage.getItem('mgfj_stock_counts') || '{}'); } catch(e) { return {}; }
+}
+function renderStockLimits() {
+  const grid = document.getElementById('stockGrid');
+  if (!grid) return;
+  const wk = currentDeliveryWeekKey();
+  const lbl = document.getElementById('stockWeekLabel');
+  if (lbl) lbl.textContent = new Date(wk+'T00:00:00').toLocaleDateString('en-JM',{weekday:'long',month:'long',day:'numeric'});
+  const limits = getStockLimitsAdmin();
+  const counts = getStockCountsAdmin();
+  grid.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>Crop</th><th>Weekly Limit</th><th>Sold</th><th>Remaining</th><th>Status</th></tr></thead><tbody>' +
+    getProducts().map(function(p){
+      const lim = parseInt(limits[p.id],10) || 0;
+      const sold = parseInt(counts[p.id],10) || 0;
+      const remaining = lim > 0 ? Math.max(0, lim - sold) : '∞';
+      const status = lim <= 0 ? '<span style="color:var(--text-muted)">Unlimited</span>'
+                   : (sold >= lim ? '<span class="badge" style="background:#fee2e2;color:#991b1b">SOLD OUT</span>'
+                                  : '<span class="badge" style="background:#dcfce7;color:#166534">In stock</span>');
+      return '<tr>' +
+        '<td><strong>'+(p.emoji||'🌿')+' '+p.name+'</strong></td>' +
+        '<td><input type="number" min="0" id="stocklim-'+p.id+'" value="'+(lim||'')+'" placeholder="∞" style="width:90px;padding:.4rem .5rem;border:1.5px solid var(--border);border-radius:6px"></td>' +
+        '<td>'+sold+'</td>' +
+        '<td><strong>'+remaining+'</strong></td>' +
+        '<td>'+status+'</td>' +
+      '</tr>';
+    }).join('') +
+    '</tbody></table></div>';
+}
+function saveStockLimits() {
+  const limits = {};
+  getProducts().forEach(function(p){
+    const v = parseInt(document.getElementById('stocklim-'+p.id)?.value || '0', 10) || 0;
+    limits[p.id] = v;
+  });
+  localStorage.setItem('mgfj_stock_limits', JSON.stringify(limits));
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.saveStockLimits(limits);
+  if (typeof addAuditEntry === 'function') addAuditEntry('Stock Limits', 'Weekly limits updated');
+  showToast('Weekly stock limits saved & synced!', 'success');
+  renderStockLimits();
+}
+async function resetWeekStock() {
+  if (!confirm('Reset this week\'s sold counts to zero? Use this at the start of a new supply week.')) return;
+  const wk = currentDeliveryWeekKey();
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) await window.MGFJ_Sync.resetStockCounts(wk);
+  localStorage.setItem('mgfj_stock_counts', '{}');
+  showToast('This week\'s stock counts reset.', 'success');
+  renderStockLimits();
+}
+/* Recompute sold counts from actual orders for the current delivery week */
+async function recalcStockFromOrders() {
+  const wk = currentDeliveryWeekKey();
+  const counts = {};
+  getOrders().forEach(function(o){
+    if (o.status === 'cancelled') return;
+    /* Match orders whose delivery date is this week (fallback: all non-delivered) */
+    const od = o.deliveryDate ? o.deliveryDate.slice(0,10) : null;
+    if (od && od !== wk) return;
+    (o.items||[]).forEach(function(it){
+      const id = it.productId || it.id;
+      if (!id) return;
+      counts[id] = (counts[id]||0) + (it.qty||0);
+    });
+  });
+  /* Overwrite the public counter doc */
+  if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
+    await window.MGFJ_Sync.resetStockCounts(wk);
+    const items = Object.keys(counts).map(function(id){ return { cropId:id, qty:counts[id] }; });
+    if (items.length) await window.MGFJ_Sync.incrementStock(wk, items);
+  }
+  localStorage.setItem('mgfj_stock_counts', JSON.stringify(counts));
+  showToast('Recalculated sold counts from orders.', 'success');
+  renderStockLimits();
 }
 
 /* ── BLOG MANAGEMENT ── */

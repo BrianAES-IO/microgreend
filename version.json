@@ -1,5 +1,5 @@
 {
-  "version": "20260604-4",
-  "released": "2026-06-04T19:30:00Z",
-  "notes": "Delivery-area restriction + admin region control"
+  "version": "20260604-5",
+  "released": "2026-06-04T20:30:00Z",
+  "notes": "Weekly stock limits + auto sold-out per crop"
 }
