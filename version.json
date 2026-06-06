@@ -1,5 +1,5 @@
 {
-  "version": "20260604-5",
-  "released": "2026-06-04T20:30:00Z",
-  "notes": "Weekly stock limits + auto sold-out per crop"
+  "version": "20260604-6",
+  "released": "2026-06-04T21:30:00Z",
+  "notes": "Live visitor presence board in admin"
 }

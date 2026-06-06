@@ -387,4 +387,69 @@
   /* Wait a tick for firebase-sync.js to finish initialising */
   setTimeout(startPublicSync, 300);
 
+  /* ══════════════════════════════════════════════════════
+     LIVE PRESENCE (visitor side)
+     Sends a heartbeat so the admin's "Live Visitors" board can
+     show who's online, what page they're on, and order activity.
+     Skips the admin page itself.
+     ══════════════════════════════════════════════════════ */
+  (function presenceTracker() {
+    if (/admin\.html$/i.test(location.pathname)) return; /* don't track admin */
+
+    /* Stable per-tab session id */
+    var sid = sessionStorage.getItem('mgfj_sid');
+    if (!sid) {
+      sid = 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      sessionStorage.setItem('mgfj_sid', sid);
+    }
+    var startedAt = sessionStorage.getItem('mgfj_sid_start');
+    if (!startedAt) { startedAt = new Date().toISOString(); sessionStorage.setItem('mgfj_sid_start', startedAt); }
+
+    var pageName = (function(){
+      var p = (location.pathname.split('/').pop() || 'index.html').replace('.html','');
+      return p.charAt(0).toUpperCase() + p.slice(1) || 'Home';
+    })();
+
+    var device = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
+    var ref = (function(){ try { return sessionStorage.getItem('mgfj_aff_ref') || ''; } catch(e){ return ''; } })();
+
+    /* Current status — order.html updates this via window.MGFJ_setPresence */
+    var state = { status: 'browsing', cartCount: 0, cartValue: 0, parish: '' };
+
+    function beat() {
+      if (!window.MGFJ_Sync || !window.MGFJ_Sync.ready()) return;
+      window.MGFJ_Sync.presenceHeartbeat(sid, {
+        page: pageName,
+        status: state.status,
+        cartCount: state.cartCount,
+        cartValue: state.cartValue,
+        parish: state.parish,
+        ref: ref,
+        device: device,
+        startedAt: startedAt
+      });
+    }
+
+    /* Public hook so order.html can report activity */
+    window.MGFJ_setPresence = function(patch) {
+      Object.assign(state, patch || {});
+      beat();
+    };
+
+    /* First beat once Firebase is ready, then every 20s */
+    (function waitReady(){
+      if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) { beat(); }
+      else { setTimeout(waitReady, 800); }
+    })();
+    setInterval(beat, 20000);
+
+    /* Re-beat when tab regains focus; remove presence when leaving */
+    document.addEventListener('visibilitychange', function(){
+      if (document.visibilityState === 'visible') beat();
+    });
+    window.addEventListener('pagehide', function(){
+      if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) window.MGFJ_Sync.presenceRemove(sid);
+    });
+  })();
+
 })();

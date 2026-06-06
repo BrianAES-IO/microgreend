@@ -230,6 +230,45 @@ window.MGFJ_Sync = {
   saveStockLimits(obj)     { return this._saveState('public_state', 'stock_limits', obj); },
   subscribeStockLimits(cb) { return this._subscribeState('public_state', 'stock_limits', cb); },
 
+  /* ── LIVE PRESENCE (active visitors) ──
+     Each visitor writes a heartbeat doc to `presence/{sessionId}`.
+     Admin subscribes to the whole collection to see who's online,
+     what page they're on, and whether they're mid-order. */
+  presenceHeartbeat(sessionId, data) {
+    if (!this.ready() || !sessionId) return Promise.resolve(false);
+    return window._db.collection('presence').doc(sessionId).set(
+      Object.assign({}, data, { lastSeen: firebase.firestore.FieldValue.serverTimestamp() }),
+      { merge: true }
+    ).then(function(){ return true; }).catch(function(){ return false; });
+  },
+  presenceRemove(sessionId) {
+    if (!this.ready() || !sessionId) return Promise.resolve(false);
+    return window._db.collection('presence').doc(sessionId).delete().catch(function(){});
+  },
+  subscribePresence(onChange) {
+    if (!this.ready()) { onChange([]); return function(){}; }
+    return window._db.collection('presence').onSnapshot(function(snap) {
+      const list = snap.docs.map(function(d) {
+        const x = d.data() || {};
+        let lastSeenMs = 0;
+        if (x.lastSeen && typeof x.lastSeen.toMillis === 'function') lastSeenMs = x.lastSeen.toMillis();
+        return {
+          id: d.id,
+          page: x.page || '',
+          status: x.status || 'browsing',
+          parish: x.parish || '',
+          cartCount: x.cartCount || 0,
+          cartValue: x.cartValue || 0,
+          ref: x.ref || '',
+          device: x.device || '',
+          startedAt: x.startedAt || null,
+          lastSeenMs: lastSeenMs
+        };
+      });
+      onChange(list);
+    }, function(err){ console.warn('[MGFJ] presence listener:', err.message); });
+  },
+
   /* ── WEEKLY STOCK COUNTERS (public, per delivery week) ──
      stock_counts/{weekKey} = { cropId: soldQty, ... }
      Anonymous customers increment these as they order; the order

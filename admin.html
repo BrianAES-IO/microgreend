@@ -41,7 +41,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-storage-compat.js"></script>
-  <script src="js/firebase-sync.js?v=20260604-5"></script>
+  <script src="js/firebase-sync.js?v=20260604-6"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -973,6 +973,10 @@
         <span class="nav-icon">📋</span><span>Orders</span>
         <span class="nav-badge" id="sidebarOrdersBadge"></span>
       </button>
+      <button class="nav-item" onclick="switchTab('live')">
+        <span class="nav-icon">📡</span><span>Live Visitors</span>
+        <span class="nav-badge" id="sidebarLiveBadge" style="display:none;background:#16a34a"></span>
+      </button>
       <div class="sidebar-section-label">Operations</div>
       <button class="nav-item" onclick="switchTab('delivery')">
         <span class="nav-icon">🚚</span><span>Delivery</span>
@@ -1071,6 +1075,32 @@
             </table>
           </div>
         </div>
+      </div>
+
+      <!-- ── LIVE VISITORS TAB ── -->
+      <div class="tab-pane fade-in" id="tab-live">
+        <div class="page-header">
+          <div><h2>Live Visitors</h2><p>Who's on the site right now, where they are, and order activity</p></div>
+          <button class="btn btn-outline btn-sm" onclick="renderLiveVisitors()">↻ Refresh</button>
+        </div>
+        <div class="kpi-grid" id="liveKpis"></div>
+        <div class="card" style="margin-top:1rem;padding:0">
+          <div class="card-header" style="padding:.85rem 1.15rem">
+            <h3>Active Now</h3>
+            <span style="font-size:.78rem;color:var(--text-muted)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:.35rem"></span>Updated live</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Visitor</th><th>Device</th><th>On Page</th><th>Activity</th><th>Cart</th><th>Parish</th><th>Source</th><th>Active</th></tr></thead>
+              <tbody id="liveVisitorsBody"></tbody>
+            </table>
+          </div>
+          <div id="liveEmpty" class="empty-state" style="display:none;padding:2rem">
+            <div class="ei">📡</div>
+            <p>No active visitors right now. This board updates the moment someone opens the site.</p>
+          </div>
+        </div>
+        <p style="font-size:.74rem;color:var(--text-muted);margin-top:.75rem">Visitors are shown as "active" if they've interacted in the last 90 seconds. Identities are anonymous session IDs — no personal data is collected until they submit an order.</p>
       </div>
 
       <!-- ── ORDERS TAB ── -->
@@ -2733,6 +2763,90 @@ function updateOrderStatus(id, newStatus) {
   refreshAll();
 }
 
+/* ════════════════════════════════════════════════
+   LIVE VISITORS (presence)
+════════════════════════════════════════════════ */
+let _livePresence = [];
+let _liveUnsub = null;
+const LIVE_ACTIVE_MS = 90 * 1000; /* "active" if seen in last 90s */
+
+function startLivePresence() {
+  if (!window.MGFJ_Sync || !window.MGFJ_Sync.ready() || _liveUnsub) return;
+  _liveUnsub = window.MGFJ_Sync.subscribePresence(function(list) {
+    _livePresence = list || [];
+    updateLiveBadge();
+    if (currentTab === 'live') renderLiveVisitors();
+  });
+}
+function activeVisitors() {
+  const now = Date.now();
+  return _livePresence.filter(function(v){ return v.lastSeenMs && (now - v.lastSeenMs) < LIVE_ACTIVE_MS; });
+}
+function updateLiveBadge() {
+  const n = activeVisitors().length;
+  const b = document.getElementById('sidebarLiveBadge');
+  if (b) { b.textContent = n || ''; b.style.display = n ? 'flex' : 'none'; }
+}
+function timeAgo(ms) {
+  const s = Math.floor((Date.now() - ms) / 1000);
+  if (s < 10) return 'just now';
+  if (s < 60) return s + 's ago';
+  const m = Math.floor(s/60);
+  return m + 'm ago';
+}
+function renderLiveVisitors() {
+  const body = document.getElementById('liveVisitorsBody');
+  const empty = document.getElementById('liveEmpty');
+  const kpis = document.getElementById('liveKpis');
+  if (!body) return;
+  const active = activeVisitors();
+
+  if (kpis) {
+    const ordering = active.filter(function(v){ return /select|checkout|order/i.test(v.status); }).length;
+    const onOrder = active.filter(function(v){ return /order/i.test(v.page); }).length;
+    const placed = active.filter(function(v){ return /placed/i.test(v.status); }).length;
+    kpis.innerHTML = [
+      {icon:'📡',label:'Active Now',val:active.length,sub:'in last 90s',cls:'green'},
+      {icon:'🛒',label:'Ordering',val:ordering,sub:'building an order',cls:'gold'},
+      {icon:'📋',label:'On Order Page',val:onOrder,sub:'browsing products'},
+      {icon:'✅',label:'Just Placed',val:placed,sub:'order completed',cls:'green'}
+    ].map(function(k){
+      return '<div class="kpi-card '+(k.cls||'')+'"><div class="kpi-icon">'+k.icon+'</div><div class="kpi-val">'+k.val+'</div><div class="kpi-label">'+k.label+'</div><div class="kpi-sub">'+k.sub+'</div></div>';
+    }).join('');
+  }
+
+  if (!active.length) { body.innerHTML=''; if(empty)empty.style.display='block'; return; }
+  if (empty) empty.style.display = 'none';
+
+  /* Sort: most engaged first (placed > checkout > selecting > browsing) */
+  const rank = function(s){ if(/placed/i.test(s))return 0; if(/checkout/i.test(s))return 1; if(/select/i.test(s))return 2; return 3; };
+  active.sort(function(a,b){ return rank(a.status)-rank(b.status) || b.lastSeenMs-a.lastSeenMs; });
+
+  body.innerHTML = active.map(function(v){
+    const statusColor = /placed/i.test(v.status) ? '#16a34a'
+                      : /checkout/i.test(v.status) ? '#b45309'
+                      : /select/i.test(v.status) ? '#2563eb' : 'var(--text-muted)';
+    const cart = v.cartCount ? (v.cartCount + ' item' + (v.cartCount>1?'s':'') + ' · ' + fmtJMD(v.cartValue||0)) : '—';
+    return '<tr>' +
+      '<td><code style="font-size:.72rem;color:var(--text-muted)">'+v.id.slice(0,8)+'</code></td>' +
+      '<td>'+(v.device==='Mobile'?'📱':'💻')+' '+(v.device||'—')+'</td>' +
+      '<td><strong>'+(v.page||'—')+'</strong></td>' +
+      '<td><span style="font-weight:700;color:'+statusColor+'">'+(v.status||'browsing')+'</span></td>' +
+      '<td style="font-size:.82rem">'+cart+'</td>' +
+      '<td style="font-size:.82rem">'+(v.parish||'—')+'</td>' +
+      '<td style="font-size:.78rem;color:var(--text-muted)">'+(v.ref ? '🔗 '+v.ref : 'Direct')+'</td>' +
+      '<td style="font-size:.78rem;color:var(--text-muted)">'+timeAgo(v.lastSeenMs)+'</td>' +
+    '</tr>';
+  }).join('');
+}
+/* Re-render the "active" timer every 15s so stale visitors drop off */
+setInterval(function(){
+  if (sessionStorage.getItem('mgfj_admin') === '1') {
+    updateLiveBadge();
+    if (currentTab === 'live') renderLiveVisitors();
+  }
+}, 15000);
+
 /* Delete a single order — local + Firestore */
 async function deleteOneOrder(id) {
   if (!confirm('Delete order ' + id + '? This cannot be undone.')) return;
@@ -2876,12 +2990,16 @@ function startCloudSync() {
     syncStateInto(pair[0], function(cb){ return window.MGFJ_Sync.subscribeAdminState(pair[1], cb); });
   });
 
+  /* Live visitor presence board */
+  startLivePresence();
+
   console.log('[admin] Cloud sync started — listening for orders + state in real time');
 }
 function stopCloudSync() {
   if (_ordersUnsubscribe) { _ordersUnsubscribe(); _ordersUnsubscribe = null; }
   _stateUnsubs.forEach(function(fn){ try { fn(); } catch(e){} });
   _stateUnsubs = [];
+  if (_liveUnsub) { try { _liveUnsub(); } catch(e){} _liveUnsub = null; }
 }
 
 /* Login form handler */
@@ -3025,6 +3143,7 @@ function refreshAll() {
   updateSidebarBadges();
   if (currentTab === 'dashboard')  renderDashboard();
   if (currentTab === 'orders')     renderOrdersTable();
+  if (currentTab === 'live')       renderLiveVisitors();
   if (currentTab === 'delivery')   renderDelivery();
   if (currentTab === 'revenue')    renderRevenue();
   if (currentTab === 'messages')   renderMessages();

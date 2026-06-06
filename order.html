@@ -52,7 +52,7 @@
   <meta name="twitter:description" content="Harvested Saturday morning, delivered to your door the same day. Order by Friday 12pm.">
   <meta name="twitter:image" content="https://www.microgreensfarmja.farm/logo.svg">
 
-  <link rel="stylesheet" href="styles.css?v=20260604-5">
+  <link rel="stylesheet" href="styles.css?v=20260604-6">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
@@ -458,10 +458,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="js/firebase-sync.js?v=20260604-5"></script>
-<script src="js/main.js?v=20260604-5"></script>
-<script src="js/overrides.js?v=20260604-5"></script>
-<script src="js/cookie-consent.js?v=20260604-5" defer></script>
+<script src="js/firebase-sync.js?v=20260604-6"></script>
+<script src="js/main.js?v=20260604-6"></script>
+<script src="js/overrides.js?v=20260604-6"></script>
+<script src="js/cookie-consent.js?v=20260604-6" defer></script>
 <script>
 document.getElementById('yr').textContent = new Date().getFullYear();
 
@@ -553,6 +553,10 @@ function checkParishDelivery() {
   const submitBtn = document.getElementById('place-order-btn');
   if (!sel || !notice) return;
   const parish = sel.value;
+  /* Report presence: customer is at checkout, with chosen parish */
+  if (parish && typeof window.MGFJ_setPresence === 'function') {
+    window.MGFJ_setPresence({ status: 'At checkout', parish: parish });
+  }
   const allowed = getDeliveryParishes();
   /* keep the notice's allowed-list text in sync with admin settings */
   const listEl = document.getElementById('parish-allowed-list');
@@ -718,6 +722,12 @@ function renderSummary() {
   itemsList.innerHTML = rows.join('');
   totalsEl.style.display = '';
   subtotalEl.textContent = fmtJMD(subtotal);
+
+  /* Report live presence: this visitor is actively building an order */
+  if (typeof window.MGFJ_setPresence === 'function') {
+    const totalQty = items.reduce((s,i) => s + i.qty, 0);
+    window.MGFJ_setPresence({ status: 'Selecting items', cartCount: totalQty, cartValue: subtotal });
+  }
 
   /* Discount calculation */
   const deliveryFee = 500;
@@ -906,6 +916,11 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     if (window.MGFJ_Sync && window.MGFJ_Sync.ready()) {
       const stockItems = orderItems.map(function(it){ return { cropId: it.productId, qty: it.qty }; });
       window.MGFJ_Sync.incrementStock(currentWeekKey(), stockItems);
+    }
+
+    /* Report presence: order placed */
+    if (typeof window.MGFJ_setPresence === 'function') {
+      window.MGFJ_setPresence({ status: '✅ Placed order', cartCount: 0, cartValue: order.total });
     }
 
     /* Record discount use */
